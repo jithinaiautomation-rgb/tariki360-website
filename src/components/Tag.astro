@@ -1,0 +1,18 @@
+---
+/** Small uppercase pill label. Replaces the old React <Tag>. */
+import Icon from './Icon.astro';
+
+interface Props {
+  color?: 'lime' | 'green' | 'gold' | 'dark' | 'red';
+  icon?: string;
+  class?: string;
+  style?: string;
+}
+
+const { color = 'lime', icon, class: className, style } = Astro.props;
+---
+
+<span class:list={['vtag', `vtag-${color}`, className]} style={style}>
+  {icon && <Icon name={icon} size={13} />}
+  <slot />
+</span>

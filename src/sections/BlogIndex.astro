@@ -1,0 +1,292 @@
+---
+/**
+ * The blog listing page — /blog/ and /ar/blog/.
+ *
+ * Posts are fetched from Sanity here, at build time, and written straight
+ * into the HTML. Nothing is fetched in the visitor's browser.
+ */
+import Base from '~/layouts/Base.astro';
+import Icon from '~/components/Icon.astro';
+import Btn from '~/components/Btn.astro';
+import Tag from '~/components/Tag.astro';
+import Reveal from '~/components/Reveal.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import PostCard from '~/components/PostCard.astro';
+import CategoryFilter from '~/components/CategoryFilter.astro';
+import SanityImage from '~/components/SanityImage.astro';
+import NewsletterForm from '~/components/react/NewsletterForm.tsx';
+
+import { localePath, absoluteUrl, type Lang } from '~/lib/i18n';
+import { BLOG } from '~/content/blog';
+import { pageCopy } from '~/lib/pageCopy';
+import { COMMON } from '~/content/site';
+import { fetchSanity } from '~/lib/sanity';
+import { FEATURED_POST_QUERY, POSTS_QUERY } from '~/lib/queries';
+import { formatFullDate } from '~/lib/format';
+import { breadcrumbSchema } from '~/lib/seo';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+// Page wording comes from the 'pageBlog' document in Sanity, laid over
+// the built-in copy. See src/lib/pageCopy.ts.
+const t = await pageCopy('pageBlog', lang, BLOG[lang]);
+const common = COMMON[lang];
+
+/* ---- Data ---------------------------------------------------------------- */
+
+type Post = {
+  title: string;
+  slug: string | null;
+  badge: string;
+  icon?: string;
+  c?: string;
+  color?: string;
+  desc: string;
+  date: string;
+  read: string;
+  author?: string;
+  authorRole?: string;
+  initials?: string;
+  mainImage?: any;
+};
+
+const featuredRaw = await fetchSanity<Post>(
+  FEATURED_POST_QUERY,
+  { lang },
+  t.fallbackFeatured as unknown as Post,
+);
+const postsRaw = await fetchSanity<Post[]>(
+  POSTS_QUERY,
+  { lang },
+  t.fallbackPosts as unknown as Post[],
+);
+
+/* Sanity gives ISO dates; the fallback content already has display strings.
+   Only reformat when it looks like an ISO date. */
+const fmt = (d: string) => (/^\d{4}-\d{2}-\d{2}/.test(d) ? formatFullDate(d, lang) : d);
+
+const featured = { ...featuredRaw, date: fmt(featuredRaw.date) };
+const posts = postsRaw.map((p) => ({ ...p, date: fmt(p.date) }));
+
+/** Distinct badges become the filter pills. */
+const categories = [...new Set(posts.map((p) => p.badge).filter(Boolean))];
+
+const hasPosts = posts.length > 0;
+
+/* ---- SEO ----------------------------------------------------------------- */
+
+const schemas = [
+  breadcrumbSchema([
+    { name: common.breadcrumbHome, url: absoluteUrl(localePath(lang), Astro.site) },
+    { name: t.heroTag, url: absoluteUrl(localePath(lang, 'blog'), Astro.site) },
+  ]),
+];
+
+const crumbs = [
+  { name: common.breadcrumbHome, href: localePath(lang) },
+  { name: t.heroTag },
+];
+
+const featuredHref = featured.slug ? localePath(lang, 'blog/' + featured.slug) : null;
+---
+
+<Base
+  lang={lang}
+  path="blog"
+  title={t.metaTitle}
+  description={t.metaDescription}
+  seoTitle={t.seo?.title}
+  seoDescription={t.seo?.description}
+  seoImage={t.seo?.image}
+  schemas={schemas}>
+  {/* ---- Hero ---- */}
+  <section class="vsec" style="background:#F5EDD8;padding:52px 0;position:relative;overflow:hidden">
+    <div
+      style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(133,19,29,0.10) 1.5px,transparent 1.5px),radial-gradient(circle,rgba(133,19,29,0.06) 1px,transparent 1px);background-size:36px 36px,18px 18px;background-position:0 0,9px 9px">
+    </div>
+    <div
+      style="position:absolute;top:-40px;right:-40px;width:340px;height:240px;border-radius:0 0 0 100%;background:linear-gradient(135deg,rgba(133,19,29,0.07) 0%,transparent 60%);pointer-events:none">
+    </div>
+    <div
+      style="position:absolute;bottom:-30px;left:20%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(12,77,28,0.08) 0%,transparent 70%);pointer-events:none">
+    </div>
+    <div
+      style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,rgba(12,77,28,0.18),rgba(133,19,29,0.15),transparent);pointer-events:none">
+    </div>
+
+    <div class="vc" style="max-width:720px;position:relative;z-index:1">
+      <Breadcrumbs items={crumbs} style="margin-bottom:18px" />
+      <Tag color="green">{t.heroTag}</Tag>
+      <h1
+        class="vh2"
+        style="color:var(--c-dark);margin-top:18px;margin-bottom:14px;font-size:clamp(28px,7vw,52px)">
+        {t.heroTitle}
+      </h1>
+      <p style="color:var(--c-muted);font-size:18px;line-height:1.65">{t.heroSubtitle}</p>
+    </div>
+  </section>
+
+  {/* ---- Featured post ---- */}
+  {
+    featured?.title && (
+      <section class="vsec vsec-light" style="padding-bottom:0">
+        <div class="vc">
+          <div class="g2" style="gap:32px;align-items:stretch">
+            <div style="border-radius:20px;overflow:hidden;min-height:280px;background:linear-gradient(135deg,var(--c-dark) 0%,rgba(52,92,51,.85) 100%);position:relative;display:flex;align-items:center;justify-content:center">
+              {featured.mainImage?.asset ? (
+                <SanityImage
+                  image={featured.mainImage}
+                  alt=""
+                  width={600}
+                  height={400}
+                  sizes="(max-width: 900px) 100vw, 560px"
+                  loading="eager"
+                  style="width:100%;height:100%;object-fit:cover;display:block"
+                />
+              ) : (
+                <>
+                  <Icon
+                    name="auto_stories"
+                    size={110}
+                    color="rgba(157,227,20,.12)"
+                    style="position:absolute"
+                  />
+                  <Icon
+                    name={featured.icon ?? 'insights'}
+                    size={56}
+                    color="var(--c-lime)"
+                    style="position:relative"
+                  />
+                </>
+              )}
+              <div style="position:absolute;top:16px;inset-inline-start:16px">
+                <Tag color="dark">{featured.badge}</Tag>
+              </div>
+              <div style="position:absolute;bottom:16px;inset-inline-start:16px">
+                <Tag color="lime" icon="star">{t.featuredTag}</Tag>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;justify-content:center">
+              <h2
+                class="vh3"
+                style="font-size:clamp(22px,3.4vw,30px);color:var(--c-dark);margin:0 0 14px;line-height:1.3">
+                {featuredHref ? (
+                  <a href={featuredHref} style="color:inherit;text-decoration:none">
+                    {featured.title}
+                  </a>
+                ) : (
+                  featured.title
+                )}
+              </h2>
+              <p style="color:var(--c-muted);font-size:16px;line-height:1.7;margin:0 0 24px">
+                {featured.desc}
+              </p>
+
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+                <div style="width:44px;height:44px;border-radius:50%;background:var(--c-lime-dim);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:var(--c-green);flex-shrink:0">
+                  {featured.initials}
+                </div>
+                <div>
+                  <div style="font-weight:700;font-size:14px;color:var(--c-dark)">
+                    {featured.author}
+                  </div>
+                  <div style="font-size:13px;color:var(--c-muted)">{featured.authorRole}</div>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:18px;margin-bottom:28px">
+                <span style="font-size:13px;color:var(--c-muted);display:flex;align-items:center;gap:5px">
+                  <Icon name="calendar_today" size={15} />
+                  {featured.date}
+                </span>
+                <span style="font-size:13px;color:var(--c-muted);display:flex;align-items:center;gap:5px">
+                  <Icon name="schedule" size={15} />
+                  {featured.read}
+                </span>
+              </div>
+
+              {featuredHref && (
+                <div>
+                  <Btn variant="lime" icon="arrow_forward" href={featuredHref}>
+                    {t.readArticle}
+                  </Btn>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  {/* ---- Post grid ---- */}
+  <section class="vsec vsec-light">
+    <div class="vc">
+      <div
+        class="vwhitepapers-head"
+        style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;margin-top:24px">
+        <div>
+          <h2 class="vh2" style="margin-bottom:6px">{t.latestTitle}</h2>
+          <p style="color:var(--c-muted);font-size:16px">{t.latestSubtitle}</p>
+        </div>
+        <CategoryFilter allLabel={t.allPosts} categories={categories} target="#post-grid" />
+      </div>
+
+      {
+        hasPosts ? (
+          <div class="g3" id="post-grid">
+            {posts.map((p, i) => (
+              <Reveal delay={i * 80}>
+                <PostCard
+                  href={p.slug ? localePath(lang, 'blog/' + p.slug) : null}
+                  title={p.title}
+                  desc={p.desc}
+                  badge={p.badge}
+                  color={p.c ?? p.color}
+                  icon={p.icon}
+                  date={p.date}
+                  read={p.read}
+                  author={p.author}
+                  initials={p.initials}
+                  image={p.mainImage}
+                  readLabel={t.read}
+                />
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <p class="vempty">{t.emptyState}</p>
+        )
+      }
+    </div>
+  </section>
+
+  {/* ---- Newsletter ---- */}
+  <section class="vsec" style="background:var(--c-dark);padding:64px 0">
+    <div class="vc" style="text-align:center;max-width:560px">
+      <h2 class="vh2" style="color:#fff;margin-bottom:12px">{t.newsletterTitle}</h2>
+      <p style="color:rgba(255,255,255,0.55);font-size:16px;margin-bottom:28px;line-height:1.6">
+        {t.newsletterSub}
+      </p>
+
+      <NewsletterForm
+        placeholder={t.emailPh}
+        submitLabel={t.subscribe}
+        thanksLabel={t.thanks}
+        theme="dark"
+        client:visible
+      />
+
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:32px">
+        <Btn variant="outline" lead="folder_open" href={localePath(lang, 'white-papers')}>
+          {t.browseResources}
+        </Btn>
+        <Btn variant="ghost" lead="rocket_launch" opensSignup>{t.startCareerMapping}</Btn>
+      </div>
+    </div>
+  </section>
+</Base>

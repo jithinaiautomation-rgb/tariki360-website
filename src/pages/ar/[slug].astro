@@ -1,0 +1,23 @@
+---
+/** Arabic Sanity-built landing pages  →  /ar/<slug>/ */
+import LandingPage from '~/sections/LandingPage.astro';
+import { fetchList, fetchSanity } from '~/lib/sanity';
+import { LANDING_PATHS_QUERY, LANDING_BY_SLUG_QUERY } from '~/lib/queries';
+import { isReserved } from '~/lib/reserved';
+
+export async function getStaticPaths() {
+  const all = await fetchList<{ slug: string; lang: string }>(LANDING_PATHS_QUERY);
+  return all
+    .filter((p) => p.lang === 'ar' && p.slug && !isReserved(p.slug))
+    .map((p) => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+const page = await fetchSanity<any>(LANDING_BY_SLUG_QUERY, { slug, lang: 'ar' }, null);
+
+if (!page) {
+  return Astro.redirect('/ar/');
+}
+---
+
+<LandingPage lang="ar" page={page} />

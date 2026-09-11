@@ -1,0 +1,224 @@
+---
+/**
+ * The white papers listing — /white-papers/ and /ar/white-papers/.
+ * This is the page the nav calls "Resources".
+ */
+import Base from '~/layouts/Base.astro';
+import Icon from '~/components/Icon.astro';
+import Btn from '~/components/Btn.astro';
+import Tag from '~/components/Tag.astro';
+import Reveal from '~/components/Reveal.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import CategoryFilter from '~/components/CategoryFilter.astro';
+import SanityImage from '~/components/SanityImage.astro';
+
+import { localePath, absoluteUrl, type Lang } from '~/lib/i18n';
+import { WHITE_PAPERS } from '~/content/whitePapers';
+import { pageCopy } from '~/lib/pageCopy';
+import { COMMON } from '~/content/site';
+import { fetchSanity } from '~/lib/sanity';
+import { PAPERS_QUERY } from '~/lib/queries';
+import { formatMonthYear } from '~/lib/format';
+import { breadcrumbSchema } from '~/lib/seo';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+// Page wording comes from the 'pageResources' document in Sanity, laid over
+// the built-in copy. See src/lib/pageCopy.ts.
+const t = await pageCopy('pageResources', lang, WHITE_PAPERS[lang]);
+const common = COMMON[lang];
+
+type Paper = {
+  title: string;
+  slug: string | null;
+  badge: string;
+  desc: string;
+  date: string;
+  fileUrl?: string | null;
+  coverImage?: any;
+};
+
+const papersRaw = await fetchSanity<Paper[]>(
+  PAPERS_QUERY,
+  { lang },
+  t.fallbackPapers as unknown as Paper[],
+);
+
+const fmt = (d: string) => (/^\d{4}-\d{2}-\d{2}/.test(d) ? formatMonthYear(d, lang) : d);
+const papers = papersRaw.map((p) => ({ ...p, date: fmt(p.date) }));
+
+const categories = [...new Set(papers.map((p) => p.badge).filter(Boolean))];
+const hasPapers = papers.length > 0;
+
+const crumbs = [
+  { name: common.breadcrumbHome, href: localePath(lang) },
+  { name: t.sectionTitle },
+];
+
+const schemas = [
+  breadcrumbSchema([
+    { name: common.breadcrumbHome, url: absoluteUrl(localePath(lang), Astro.site) },
+    {
+      name: t.sectionTitle,
+      url: absoluteUrl(localePath(lang, 'white-papers'), Astro.site),
+    },
+  ]),
+];
+---
+
+<Base
+  lang={lang}
+  path="white-papers"
+  title={t.metaTitle}
+  description={t.metaDescription}
+  seoTitle={t.seo?.title}
+  seoDescription={t.seo?.description}
+  seoImage={t.seo?.image}
+  schemas={schemas}>
+  {/* ---- Hero ---- */}
+  <section class="vsec" style="background:#F5EDD8;padding:52px 0;position:relative;overflow:hidden">
+    <div
+      style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(133,19,29,0.10) 1.5px,transparent 1.5px),radial-gradient(circle,rgba(133,19,29,0.06) 1px,transparent 1px);background-size:36px 36px,18px 18px;background-position:0 0,9px 9px">
+    </div>
+    <div
+      style="position:absolute;top:-40px;right:-40px;width:340px;height:240px;border-radius:0 0 0 100%;background:linear-gradient(135deg,rgba(133,19,29,0.07) 0%,transparent 60%);pointer-events:none">
+    </div>
+    <div
+      style="position:absolute;bottom:-30px;left:20%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(12,77,28,0.08) 0%,transparent 70%);pointer-events:none">
+    </div>
+    <div
+      style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,rgba(12,77,28,0.18),rgba(133,19,29,0.15),transparent);pointer-events:none">
+    </div>
+
+    <div class="vc" style="max-width:720px;position:relative;z-index:1">
+      <Breadcrumbs items={crumbs} style="margin-bottom:18px" />
+      <Tag color="green">{t.heroTag}</Tag>
+      <h1
+        class="vh2"
+        style="color:var(--c-dark);margin-top:18px;margin-bottom:14px;font-size:clamp(28px,7vw,52px)">
+        {t.heroTitle}
+      </h1>
+      <p style="color:var(--c-muted);font-size:18px;line-height:1.65">{t.heroSubtitle}</p>
+    </div>
+  </section>
+
+  {/* ---- Paper grid ---- */}
+  <section class="vsec vsec-light">
+    <div class="vc">
+      <div
+        class="vwhitepapers-head"
+        style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px">
+        <div>
+          <h2 class="vh2" style="margin-bottom:6px">{t.sectionTitle}</h2>
+          <p style="color:var(--c-muted);font-size:16px">{t.sectionSubtitle}</p>
+        </div>
+        <CategoryFilter allLabel={t.allGuides} categories={categories} target="#paper-grid" />
+      </div>
+
+      {
+        hasPapers ? (
+          <div class="g3" id="paper-grid">
+            {papers.map((p, i) => {
+              const href = p.slug ? localePath(lang, 'white-papers/' + p.slug) : null;
+              return (
+                <Reveal delay={i * 90}>
+                  <div
+                    data-category={p.badge}
+                    class="vcard vcard-hover"
+                    style="padding:0;overflow:hidden;border-radius:16px;display:flex;flex-direction:column">
+                    <div style="height:140px;background:linear-gradient(135deg,var(--c-dark) 0%,rgba(52,92,51,.8) 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+                      {p.coverImage?.asset ? (
+                        <SanityImage
+                          image={p.coverImage}
+                          alt=""
+                          width={400}
+                          height={140}
+                          sizes="(max-width: 900px) 100vw, 380px"
+                          style="width:100%;height:100%;object-fit:cover;display:block"
+                        />
+                      ) : (
+                        <>
+                          <Icon
+                            name="description"
+                            size={80}
+                            color="rgba(157,227,20,.12)"
+                            style="position:absolute"
+                          />
+                          <Icon
+                            name="article"
+                            size={44}
+                            color="var(--c-lime)"
+                            style="position:relative"
+                          />
+                        </>
+                      )}
+                      <div style="position:absolute;top:12px;inset-inline-start:12px">
+                        <Tag color="dark">{p.badge}</Tag>
+                      </div>
+                    </div>
+
+                    <div style="padding:24px;display:flex;flex-direction:column;flex:1">
+                      <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--c-dark);margin:0 0 8px;line-height:1.4">
+                        {href ? (
+                          <a href={href} style="color:inherit;text-decoration:none">
+                            {p.title}
+                          </a>
+                        ) : (
+                          p.title
+                        )}
+                      </h3>
+                      <p style="color:var(--c-muted);font-size:13px;line-height:1.55;flex:1;margin:0 0 16px">
+                        {p.desc}
+                      </p>
+                      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                        <span style="font-size:12px;color:var(--c-muted);display:flex;align-items:center;gap:5px">
+                          <Icon name="calendar_today" size={14} />
+                          {p.date}
+                        </span>
+                        {href ? (
+                          <a
+                            href={href}
+                            style="color:var(--c-green);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px;text-decoration:none">
+                            {t.readMore}
+                            <Icon name="arrow_forward" size={16} />
+                          </a>
+                        ) : p.fileUrl ? (
+                          <a
+                            href={p.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style="color:var(--c-green);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px;text-decoration:none">
+                            {t.downloadPdf}
+                            <Icon name="download" size={16} />
+                          </a>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        ) : (
+          <p class="vempty">{t.emptyState}</p>
+        )
+      }
+    </div>
+  </section>
+
+  {/* ---- CTA ---- */}
+  <section class="vsec" style="background:var(--c-dark);padding:64px 0">
+    <div class="vc" style="text-align:center">
+      <h2 class="vh2" style="color:#fff;margin-bottom:16px">{t.ctaTitle}</h2>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+        <Btn variant="lime" lead="description" opensSignup>{t.ctaDownload}</Btn>
+        <Btn variant="outline" lead="campaign" href={localePath(lang, 'contact')}>
+          {t.ctaShare}
+        </Btn>
+      </div>
+    </div>
+  </section>
+</Base>

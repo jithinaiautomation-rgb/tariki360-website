@@ -1,0 +1,21 @@
+---
+/** Icon + heading + description row. Replaces the old React <Feat>. */
+import Chip from './Chip.astro';
+
+interface Props {
+  icon: string;
+  title: string;
+  desc?: string;
+  dark?: boolean;
+}
+
+const { icon, title, desc, dark = false } = Astro.props;
+---
+
+<div class="vfeat">
+  <Chip icon={icon} color={dark ? 'dark' : 'lime'} />
+  <div>
+    <h5 style={dark ? 'color:#fff' : undefined}>{title}</h5>
+    {desc && <p style={dark ? 'color:rgba(255,255,255,0.55)' : undefined}>{desc}</p>}
+  </div>
+</div>

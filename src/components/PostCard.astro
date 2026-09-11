@@ -1,0 +1,121 @@
+---
+/**
+ * One article card in the blog grid.
+ *
+ * The whole card is a link when the post has a slug. Posts coming from the
+ * placeholder fallback content have no slug, so they render as a plain card
+ * — that way the page still looks right before Sanity has any posts.
+ */
+import Icon from '~/components/Icon.astro';
+import Tag from '~/components/Tag.astro';
+import SanityImage from '~/components/SanityImage.astro';
+import type { SanityImageSource } from '~/lib/sanity';
+
+interface Props {
+  href?: string | null;
+  title: string;
+  desc: string;
+  badge: string;
+  color?: string;
+  icon?: string;
+  date: string;
+  read: string;
+  author?: string;
+  initials?: string;
+  image?: SanityImageSource;
+  readLabel: string;
+  delayIndex?: number;
+}
+
+const {
+  href,
+  title,
+  desc,
+  badge,
+  color = 'lime',
+  icon = 'auto_stories',
+  date,
+  read,
+  author,
+  initials,
+  image,
+  readLabel,
+} = Astro.props;
+
+const Wrapper = href ? 'a' : 'div';
+---
+
+<Wrapper
+  href={href ?? undefined}
+  data-category={badge}
+  class:list={['vcard', 'vcard-hover', href && 'vcard-link']}
+  style="padding:0;overflow:hidden;border-radius:16px;display:flex;flex-direction:column">
+  {/* Cover: the uploaded image if there is one, otherwise the icon panel. */}
+  <div
+    style="height:140px;background:linear-gradient(135deg,var(--c-dark) 0%,rgba(52,92,51,.8) 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+    {
+      image?.asset ? (
+        <SanityImage
+          image={image}
+          alt=""
+          width={400}
+          height={140}
+          sizes="(max-width: 900px) 100vw, 380px"
+          style="width:100%;height:100%;object-fit:cover;display:block"
+        />
+      ) : (
+        <>
+          <Icon
+            name="auto_stories"
+            size={80}
+            color="rgba(157,227,20,.12)"
+            style="position:absolute"
+          />
+          <Icon name={icon} size={44} color="var(--c-lime)" style="position:relative" />
+        </>
+      )
+    }
+    <div style="position:absolute;top:12px;inset-inline-start:12px">
+      <Tag color={color as any}>{badge}</Tag>
+    </div>
+  </div>
+
+  <div style="padding:24px;display:flex;flex-direction:column;flex:1">
+    <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--c-dark);margin:0 0 8px;line-height:1.4">
+      {title}
+    </h3>
+    <p style="color:var(--c-muted);font-size:13px;line-height:1.55;flex:1;margin:0 0 16px">
+      {desc}
+    </p>
+
+    {
+      author && (
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--c-lime-dim);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:11px;color:var(--c-green);flex-shrink:0">
+            {initials}
+          </div>
+          <span style="font-size:13px;font-weight:600;color:var(--c-dark)">{author}</span>
+        </div>
+      )
+    }
+
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--c-muted);display:flex;align-items:center;gap:10px">
+        <span style="display:flex;align-items:center;gap:4px">
+          <Icon name="calendar_today" size={14} />{date}
+        </span>
+        <span style="display:flex;align-items:center;gap:4px">
+          <Icon name="schedule" size={14} />{read}
+        </span>
+      </span>
+      {
+        href && (
+          <span style="color:var(--c-green);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px">
+            {readLabel}
+            <Icon name="arrow_forward" size={16} />
+          </span>
+        )
+      }
+    </div>
+  </div>
+</Wrapper>

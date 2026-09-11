@@ -1,0 +1,65 @@
+---
+/**
+ * An image stored in Sanity, served as WebP with width and height set.
+ *
+ * Why not Astro's <Image>? Astro optimises images it can see on disk at build
+ * time. Sanity images live on Sanity's own CDN, which already does resizing
+ * and format conversion on the fly — so the right move is to ask that CDN for
+ * exactly the sizes we want.
+ *
+ * width and height are always written into the HTML. That's what stops the
+ * page from jumping around as images load (cumulative layout shift).
+ */
+import { urlFor, type SanityImageSource } from '~/lib/sanity';
+
+interface Props {
+  image: SanityImageSource;
+  alt: string;
+  /** Intrinsic width to request, in CSS pixels. */
+  width: number;
+  /** Intrinsic height. Defaults to a 16:9 crop of `width`. */
+  height?: number;
+  /** The `sizes` attribute — tells the browser how wide the image will render. */
+  sizes?: string;
+  loading?: 'lazy' | 'eager';
+  class?: string;
+  style?: string;
+}
+
+const {
+  image,
+  alt,
+  width,
+  height = Math.round((width * 9) / 16),
+  sizes = `(max-width: 900px) 100vw, ${width}px`,
+  loading = 'lazy',
+  class: className,
+  style,
+} = Astro.props;
+
+/* Offer the browser 1x and 2x so retina screens stay sharp. */
+const src = urlFor(image!).width(width).height(height).fit('crop').url();
+const srcset = [1, 2]
+  .map(
+    (d) =>
+      `${urlFor(image!)
+        .width(width * d)
+        .height(height * d)
+        .fit('crop')
+        .url()} ${d}x`,
+  )
+  .join(', ');
+---
+
+<img
+  src={src}
+  srcset={srcset}
+  sizes={sizes}
+  alt={alt}
+  width={width}
+  height={height}
+  loading={loading}
+  decoding="async"
+  class={className}
+  style={style}
+/>

@@ -1,0 +1,248 @@
+---
+/**
+ * A single blog article — /blog/[slug]/ and /ar/blog/[slug]/.
+ *
+ * The page files that use this run getStaticPaths, so one HTML file is
+ * written per post at build time.
+ *
+ * SEO on this page:
+ *   • title / description fall back to the post title and excerpt when the
+ *     Sanity SEO fields are empty
+ *   • the share image falls back to an auto-generated one built from the title
+ *   • Article and BreadcrumbList structured data are both emitted
+ */
+import Base from '~/layouts/Base.astro';
+import Icon from '~/components/Icon.astro';
+import Tag from '~/components/Tag.astro';
+import Btn from '~/components/Btn.astro';
+import Reveal from '~/components/Reveal.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import RichText from '~/components/RichText.astro';
+import SanityImage from '~/components/SanityImage.astro';
+import PostCard from '~/components/PostCard.astro';
+
+import { localePath, absoluteUrl, type Lang } from '~/lib/i18n';
+import { BLOG } from '~/content/blog';
+import { COMMON } from '~/content/site';
+import { formatFullDate, isoDate, portableTextToPlain, truncate } from '~/lib/format';
+import { urlFor } from '~/lib/sanity';
+import { getSiteSettings } from '~/lib/settings';
+import { articleSchema, breadcrumbSchema } from '~/lib/seo';
+
+export interface BlogPostData {
+  title: string;
+  slug: string;
+  badge: string;
+  icon?: string;
+  color?: string;
+  excerpt?: string;
+  body?: unknown;
+  mainImage?: any;
+  date?: string;
+  readTime?: string;
+  author?: string;
+  authorRole?: string;
+  initials?: string;
+  seo?: { title?: string; description?: string; shareImage?: any };
+}
+
+interface Props {
+  lang: Lang;
+  post: BlogPostData;
+  related: Array<any>;
+}
+
+const { lang, post, related } = Astro.props;
+const t = BLOG[lang];
+const common = COMMON[lang];
+const settings = await getSiteSettings();
+
+const path = 'blog/' + post.slug;
+const url = absoluteUrl(localePath(lang, path), Astro.site);
+
+/* ---- Description fallback chain ----------------------------------------- */
+const bodyText = portableTextToPlain(post.body);
+const description = post.excerpt?.trim() || truncate(bodyText, 160);
+
+/* ---- Share image --------------------------------------------------------- */
+/* Priority: the SEO override → the post's cover image → an auto-generated
+   card built from the title (see src/pages/og/[...slug].png.ts).
+   Generated cards are English-only; for Arabic the last step is skipped and
+   <SEO> falls back to the site-wide default image. */
+let shareImage: string | null = null;
+if (post.seo?.shareImage?.asset) {
+  shareImage = urlFor(post.seo.shareImage).width(1200).height(630).fit('crop').url();
+} else if (post.mainImage?.asset) {
+  shareImage = urlFor(post.mainImage).width(1200).height(630).fit('crop').url();
+} else if (lang === 'en') {
+  shareImage = absoluteUrl('/og/en/blog/' + post.slug + '.png', Astro.site);
+}
+
+/* ---- Structured data ----------------------------------------------------- */
+const published = isoDate(post.date);
+
+const schemas = [
+  articleSchema({
+    headline: post.title,
+    description,
+    url,
+    image: shareImage ?? undefined,
+    datePublished: published,
+    authorName: post.author,
+    publisherName: settings.siteName,
+    publisherLogo: absoluteUrl('/logo.png', Astro.site),
+    lang,
+  }),
+  breadcrumbSchema([
+    { name: common.breadcrumbHome, url: absoluteUrl(localePath(lang), Astro.site) },
+    { name: t.heroTag, url: absoluteUrl(localePath(lang, 'blog'), Astro.site) },
+    { name: post.title, url },
+  ]),
+];
+
+const crumbs = [
+  { name: common.breadcrumbHome, href: localePath(lang) },
+  { name: t.heroTag, href: localePath(lang, 'blog') },
+  { name: post.title },
+];
+
+const displayDate = formatFullDate(post.date, lang);
+---
+
+<Base
+  lang={lang}
+  path={path}
+  title={post.title}
+  description={description}
+  seoTitle={post.seo?.title}
+  seoDescription={post.seo?.description}
+  seoImage={shareImage}
+  ogType="article"
+  publishedTime={published}
+  authorName={post.author}
+  schemas={schemas}>
+  <article>
+    {/* ---- Article header ---- */}
+    <header class="vsec" style="background:#F5EDD8;padding:48px 0 40px;position:relative;overflow:hidden">
+      <div
+        style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(133,19,29,0.08) 1.5px,transparent 1.5px);background-size:32px 32px">
+      </div>
+
+      <div class="vc" style="max-width:800px;position:relative;z-index:1">
+        <Breadcrumbs items={crumbs} style="margin-bottom:20px" />
+
+        <Tag color="green">{post.badge}</Tag>
+
+        {/* The single h1 for this page. */}
+        <h1
+          class="vh2"
+          style="color:var(--c-dark);margin-top:18px;margin-bottom:16px;font-size:clamp(28px,5.5vw,44px)">
+          {post.title}
+        </h1>
+
+        {
+          post.excerpt && (
+            <p style="color:var(--c-muted);font-size:18px;line-height:1.65;margin:0 0 28px">
+              {post.excerpt}
+            </p>
+          )
+        }
+
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          {
+            post.author && (
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:44px;height:44px;border-radius:50%;background:var(--c-lime-dim);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:var(--c-green);flex-shrink:0">
+                  {post.initials}
+                </div>
+                <div>
+                  <div style="font-weight:700;font-size:14px;color:var(--c-dark)">{post.author}</div>
+                  {post.authorRole && (
+                    <div style="font-size:13px;color:var(--c-muted)">{post.authorRole}</div>
+                  )}
+                </div>
+              </div>
+            )
+          }
+
+          <div style="display:flex;align-items:center;gap:18px;margin-inline-start:auto">
+            {
+              post.date && (
+                <span style="font-size:13px;color:var(--c-muted);display:flex;align-items:center;gap:5px">
+                  <Icon name="calendar_today" size={15} />
+                  <time datetime={published}>{displayDate}</time>
+                </span>
+              )
+            }
+            {
+              post.readTime && (
+                <span style="font-size:13px;color:var(--c-muted);display:flex;align-items:center;gap:5px">
+                  <Icon name="schedule" size={15} />
+                  {post.readTime}
+                </span>
+              )
+            }
+          </div>
+        </div>
+      </div>
+    </header>
+
+    {/* ---- Cover image ---- */}
+    {
+      post.mainImage?.asset && (
+        <div class="vc" style="max-width:900px;margin-top:-24px;position:relative;z-index:2">
+          <SanityImage
+            image={post.mainImage}
+            alt=""
+            width={880}
+            height={460}
+            sizes="(max-width: 940px) 100vw, 880px"
+            loading="eager"
+            style="width:100%;height:auto;border-radius:20px;box-shadow:0 12px 48px rgba(7,24,16,0.14);display:block"
+          />
+        </div>
+      )
+    }
+
+    {/* ---- Body ---- */}
+    <div class="vsec vsec-light" style="padding-top:56px">
+      <div class="vc" style="max-width:800px">
+        <RichText value={post.body} />
+      </div>
+    </div>
+  </article>
+
+  {/* ---- Related posts ---- */}
+  {
+    related.length > 0 && (
+      <section class="vsec vsec-mid" style="padding-top:64px">
+        <div class="vc">
+          <h2 class="vh3" style="margin-bottom:28px">{t.latestTitle}</h2>
+          <div class="g3">
+            {related.map((p, i) => (
+              <Reveal delay={i * 90}>
+                <PostCard
+                  href={localePath(lang, 'blog/' + p.slug)}
+                  title={p.title}
+                  desc={p.desc}
+                  badge={p.badge}
+                  color={p.c}
+                  icon={p.icon}
+                  date={formatFullDate(p.date, lang)}
+                  read={p.read}
+                  readLabel={t.read}
+                />
+              </Reveal>
+            ))}
+          </div>
+
+          <div style="text-align:center;margin-top:40px">
+            <Btn variant="outline" href={localePath(lang, 'blog')} lead="arrow_back">
+              {common.backToBlog}
+            </Btn>
+          </div>
+        </div>
+      </section>
+    )
+  }
+</Base>

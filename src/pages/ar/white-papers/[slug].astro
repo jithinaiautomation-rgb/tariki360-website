@@ -1,0 +1,22 @@
+---
+/** One Arabic white paper  →  /ar/white-papers/<slug>/ */
+import WhitePaperPage from '~/sections/WhitePaperPage.astro';
+import { fetchList, fetchSanity } from '~/lib/sanity';
+import { PAPER_PATHS_QUERY, PAPER_BY_SLUG_QUERY } from '~/lib/queries';
+
+export async function getStaticPaths() {
+  const all = await fetchList<{ slug: string; lang: string }>(PAPER_PATHS_QUERY);
+  return all
+    .filter((p) => p.lang === 'ar' && p.slug)
+    .map((p) => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+const paper = await fetchSanity<any>(PAPER_BY_SLUG_QUERY, { slug, lang: 'ar' }, null);
+
+if (!paper) {
+  return Astro.redirect('/ar/white-papers/');
+}
+---
+
+<WhitePaperPage lang="ar" paper={paper} />

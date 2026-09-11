@@ -1,0 +1,178 @@
+---
+/**
+ * The single SEO component every page on the site uses.
+ *
+ * It is responsible for everything a search engine or a social network
+ * reads out of the <head>:
+ *
+ *   • <title> and <meta name="description">
+ *   • <link rel="canonical"> — the one true URL for this page, so the
+ *     English and Arabic versions don't compete with each other
+ *   • hreflang links tying the two language versions together
+ *   • Open Graph tags (Facebook, LinkedIn, WhatsApp previews)
+ *   • Twitter Card tags
+ *   • any JSON-LD structured data the page passes in
+ *
+ * Fallback order for title and description, as requested:
+ *   1. the SEO fields filled in on the Sanity document
+ *   2. otherwise the page title / excerpt
+ *   3. otherwise the site-wide defaults from Sanity site settings
+ */
+import { absoluteUrl, alternates, htmlLang, type Lang } from '~/lib/i18n';
+import { truncate } from '~/lib/format';
+
+interface Props {
+  lang: Lang;
+  /** The bare page path, e.g. 'blog' or 'blog/my-post'. '' for home. */
+  path: string;
+
+  /** Page-level title — used when the document has no SEO title. */
+  title: string;
+  /** Page-level description — used when the document has no SEO description. */
+  description?: string;
+
+  /** SEO overrides from the Sanity document. These win when filled in. */
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  /** Absolute URL of the share image override from Sanity. */
+  seoImage?: string | null;
+
+  /** Site-wide defaults, from the Sanity siteSettings document. */
+  siteName: string;
+  defaultDescription: string;
+  defaultImage: string;
+
+  /** 'article' for blog posts, otherwise 'website'. */
+  ogType?: 'website' | 'article';
+  /** Article metadata, only used when ogType is 'article'. */
+  publishedTime?: string;
+  modifiedTime?: string;
+  authorName?: string;
+
+  /** JSON-LD objects to embed. */
+  schemas?: Array<Record<string, unknown>>;
+
+  /** Set true on pages that should not be indexed. */
+  noindex?: boolean;
+}
+
+const {
+  lang,
+  path,
+  title,
+  description,
+  seoTitle,
+  seoDescription,
+  seoImage,
+  siteName,
+  defaultDescription,
+  defaultImage,
+  ogType = 'website',
+  publishedTime,
+  modifiedTime,
+  authorName,
+  schemas = [],
+  noindex = false,
+} = Astro.props;
+
+const site = Astro.site;
+
+/* ---- Title -------------------------------------------------------------- */
+/* Sanity SEO title wins; otherwise the page title. The site name is appended
+   unless the title already is the site name (the home page). */
+const rawTitle = (seoTitle?.trim() || title).trim();
+const fullTitle =
+  rawTitle === siteName ? siteName : `${rawTitle} | ${siteName}`;
+
+/* ---- Description -------------------------------------------------------- */
+const metaDescription = truncate(
+  seoDescription?.trim() || description?.trim() || defaultDescription,
+  160,
+);
+
+/* ---- URLs --------------------------------------------------------------- */
+const cleanPath = path.replace(/^\/+|\/+$/g, '');
+const prefix = lang === 'en' ? '' : '/ar';
+const canonicalPath = cleanPath ? prefix + '/' + cleanPath + '/' : prefix + '/';
+const canonical = absoluteUrl(canonicalPath, site);
+
+const langAlternates = alternates(path).map((a) => ({
+  hreflang: htmlLang(a.lang),
+  href: absoluteUrl(a.path, site),
+}));
+
+/* ---- Share image -------------------------------------------------------- */
+const shareImage = seoImage || defaultImage;
+---
+
+<title>{fullTitle}</title>
+<meta name="description" content={metaDescription} />
+
+<link rel="canonical" href={canonical} />
+
+{/* Tell search engines that these pages are translations of one another. */}
+{
+  langAlternates.map((a) => (
+    <link rel="alternate" hreflang={a.hreflang} href={a.href} />
+  ))
+}
+<link
+  rel="alternate"
+  hreflang="x-default"
+  href={absoluteUrl(cleanPath ? '/' + cleanPath + '/' : '/', site)}
+/>
+
+{noindex && <meta name="robots" content="noindex,nofollow" />}
+
+{/* ---- Open Graph: Facebook, LinkedIn, WhatsApp ---- */}
+<meta property="og:type" content={ogType} />
+<meta property="og:site_name" content={siteName} />
+<meta property="og:title" content={rawTitle} />
+<meta property="og:description" content={metaDescription} />
+<meta property="og:url" content={canonical} />
+<meta property="og:locale" content={lang === 'ar' ? 'ar_AE' : 'en_US'} />
+<meta
+  property="og:locale:alternate"
+  content={lang === 'ar' ? 'en_US' : 'ar_AE'}
+/>
+{
+  shareImage && (
+    <>
+      <meta property="og:image" content={shareImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={rawTitle} />
+    </>
+  )
+}
+{
+  ogType === 'article' && (
+    <>
+      {publishedTime && (
+        <meta property="article:published_time" content={publishedTime} />
+      )}
+      {modifiedTime && (
+        <meta property="article:modified_time" content={modifiedTime} />
+      )}
+      {authorName && <meta property="article:author" content={authorName} />}
+    </>
+  )
+}
+
+{/* ---- Twitter Card ---- */}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={rawTitle} />
+<meta name="twitter:description" content={metaDescription} />
+{shareImage && <meta name="twitter:image" content={shareImage} />}
+{shareImage && <meta name="twitter:image:alt" content={rawTitle} />}
+
+{/* ---- Structured data (JSON-LD) ---- */}
+{
+  schemas.map((schema) => (
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify(schema)}
+    />
+  ))
+}

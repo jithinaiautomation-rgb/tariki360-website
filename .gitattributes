@@ -1,0 +1,17 @@
+# Normalise line endings.
+#
+# Windows checks files out with CRLF, but the repository and the Amplify
+# build machine (Linux) both use LF. Declaring this keeps the two in step,
+# so you don't get spurious "every line changed" diffs when someone on a
+# different OS touches a file.
+* text=auto eol=lf
+
+# Binary files must never be converted.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.pdf  binary
+*.mp4  binary
+*.woff  binary
+*.woff2 binary

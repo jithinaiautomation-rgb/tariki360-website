@@ -1,0 +1,229 @@
+---
+/** Contact page, in one language. Rendered at /contact/ and /ar/contact/. */
+import Base from '~/layouts/Base.astro';
+import Icon from '~/components/Icon.astro';
+import Tag from '~/components/Tag.astro';
+import Chip from '~/components/Chip.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import ContactForm from '~/components/react/ContactForm.tsx';
+import NewsletterForm from '~/components/react/NewsletterForm.tsx';
+
+import { localePath, absoluteUrl, type Lang } from '~/lib/i18n';
+import { CONTACT } from '~/content/contact';
+import { pageCopy } from '~/lib/pageCopy';
+import { COMMON } from '~/content/site';
+import { getSiteSettings } from '~/lib/settings';
+import { breadcrumbSchema } from '~/lib/seo';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+// Page wording comes from the 'pageContact' document in Sanity, laid over
+// the built-in copy. See src/lib/pageCopy.ts.
+const t = await pageCopy('pageContact', lang, CONTACT[lang]);
+const common = COMMON[lang];
+const settings = await getSiteSettings();
+
+const crumbs = [
+  { name: common.breadcrumbHome, href: localePath(lang) },
+  { name: t.tag },
+];
+
+const schemas = [
+  breadcrumbSchema([
+    { name: common.breadcrumbHome, url: absoluteUrl(localePath(lang), Astro.site) },
+    { name: t.metaTitle, url: absoluteUrl(localePath(lang, 'contact'), Astro.site) },
+  ]),
+];
+
+const SOCIAL_ICONS: Record<string, string> = {
+  linkedin: 'work',
+  instagram: 'photo_camera',
+  facebook: 'groups',
+  x: 'chat',
+  twitter: 'chat',
+  youtube: 'smart_display',
+  tiktok: 'music_note',
+  whatsapp: 'chat_bubble',
+  website: 'public',
+};
+
+const socials = (settings.socialLinks ?? []).filter((s) => s.url);
+---
+
+<Base
+  lang={lang}
+  path="contact"
+  title={t.metaTitle}
+  description={t.metaDescription}
+  seoTitle={t.seo?.title}
+  seoDescription={t.seo?.description}
+  seoImage={t.seo?.image}
+  schemas={schemas}>
+  {/* ---- Hero ---- */}
+  <section class="vsec" style="background:#F5EDD8;padding:64px 0;position:relative;overflow:hidden">
+    <div
+      style="position:absolute;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;border:40px solid rgba(12,77,28,0.07);pointer-events:none">
+    </div>
+    <div
+      style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;border:28px solid rgba(12,77,28,0.05);pointer-events:none">
+    </div>
+    <div
+      style="position:absolute;bottom:-60px;left:-60px;width:260px;height:260px;border-radius:50%;border:36px solid rgba(133,19,29,0.07);pointer-events:none">
+    </div>
+    <div
+      style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(12,77,28,0.12) 1.5px,transparent 1.5px);background-size:28px 28px;opacity:0.5">
+    </div>
+
+    <div class="vc" style="max-width:720px;margin:0 auto;position:relative;z-index:1">
+      <Breadcrumbs items={crumbs} style="justify-content:center;margin-bottom:20px" />
+      <div style="text-align:center">
+        <Tag color="green">{t.tag}</Tag>
+        <h1
+          class="vh2"
+          style="color:var(--c-dark);margin-top:20px;margin-bottom:16px;font-size:clamp(28px,7vw,56px)">
+          {t.title}
+        </h1>
+        <p style="color:var(--c-muted);font-size:18px;max-width:520px;margin:0 auto;line-height:1.65">
+          {t.subtitle}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {/* ---- Routes + form ---- */}
+  <section class="vsec vsec-light">
+    <div class="vc">
+      <div class="g3" style="margin-bottom:64px">
+        {
+          t.routes.map(([icon, title, desc]) => (
+            <div class="vcard vcard-hover vcard-ltop">
+              <Chip icon={icon} color="lime" />
+              <h2 class="vh4" style="margin:18px 0 8px">{title}</h2>
+              <p style="color:var(--c-muted);font-size:15px;margin:0;line-height:1.55">{desc}</p>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="g2" style="gap:32px;align-items:flex-start">
+        {/*
+          The contact form is a React island: eight controlled fields and a
+          submit confirmation. `client:visible` means React loads only once
+          the form scrolls into view.
+        */}
+        <ContactForm lang={lang} copy={t} client:visible />
+
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div class="vcard" style="padding:28px">
+            {
+              t.info.map(([icon, title, desc, action], i) => {
+                const last = i === t.info.length - 1;
+                return (
+                  <div
+                    style={`display:flex;gap:16px;align-items:flex-start;padding-bottom:${
+                      last ? 0 : 22
+                    }px;margin-bottom:${last ? 16 : 22}px;border-bottom:${
+                      last ? 'none' : '1px solid var(--c-border)'
+                    }`}>
+                    <div style="width:44px;height:44px;border-radius:12px;background:var(--c-lime-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                      <Icon name={icon} size={22} color="var(--c-green)" />
+                    </div>
+                    <div>
+                      <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:15px;margin:0 0 3px">
+                        {title}
+                      </h3>
+                      <div style="color:var(--c-muted);font-size:13px;line-height:1.55;white-space:pre-line">
+                        {desc}
+                      </div>
+                      {action && (
+                        <div style="color:var(--c-green);font-weight:700;font-size:14px;margin-top:5px">
+                          {action.includes('@') ? (
+                            <a href={'mailto:' + action} style="color:inherit">{action}</a>
+                          ) : (
+                            <a href={'tel:' + action.replace(/\s/g, '')} style="color:inherit">
+                              {action}
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            }
+
+            {
+              socials.length > 0 && (
+                <>
+                  <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:15px;margin-bottom:12px">
+                    {t.connect}
+                  </div>
+                  <div style="display:flex;gap:10px">
+                    {socials.map((s) => (
+                      <a
+                        href={s.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={s.platform ?? 'Social profile'}
+                        style="width:40px;height:40px;border-radius:10px;border:1.5px solid var(--c-border);display:flex;align-items:center;justify-content:center">
+                        <Icon
+                          name={SOCIAL_ICONS[(s.platform ?? '').toLowerCase()] ?? 'public'}
+                          size={19}
+                          color="var(--c-green)"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </>
+              )
+            }
+          </div>
+
+          {/* Map */}
+          <div style="border-radius:20px;overflow:hidden;border:1.5px solid var(--c-border)">
+            <iframe
+              title={t.mapFrameTitle}
+              src="https://maps.google.com/maps?q=Sheikh+Zayed+Road,Dubai,UAE&t=&z=14&ie=UTF8&iwloc=&output=embed"
+              width="100%"
+              height="260"
+              style="display:block;border:none"
+              loading="lazy"></iframe>
+            <div style="background:rgba(255,255,255,0.95);padding:12px 18px;border-top:1px solid var(--c-border);display:flex;align-items:center;gap:10px">
+              <Icon name="location_on" size={20} color="var(--c-lime)" />
+              <div>
+                <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;color:var(--c-green)">
+                  {t.mapTitle}
+                </div>
+                <div style="font-size:12px;color:var(--c-muted)">{t.mapSub}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ---- Newsletter ---- */}
+  <section style="background:var(--c-dark);padding:56px 0">
+    <div class="vc" style="display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap">
+      <div>
+        <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:26px;color:#fff;margin:0 0 6px">
+          {t.newsletterTitle}
+        </h2>
+        <p style="color:rgba(255,255,255,0.6);margin:0;font-size:16px">{t.newsletterSub}</p>
+      </div>
+      <div style="width:100%;max-width:420px">
+        <NewsletterForm
+          placeholder={t.newsletterPh}
+          submitLabel={t.subscribe}
+          thanksLabel={t.newsletterThanks}
+          theme="dark"
+          client:visible
+        />
+      </div>
+    </div>
+  </section>
+</Base>

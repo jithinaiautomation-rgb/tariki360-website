@@ -1,0 +1,29 @@
+---
+/** One Arabic blog post  →  /ar/blog/<slug>/  (see the English twin for notes) */
+import BlogPost from '~/sections/BlogPost.astro';
+import { fetchList, fetchSanity } from '~/lib/sanity';
+import {
+  POST_PATHS_QUERY,
+  POST_BY_SLUG_QUERY,
+  RELATED_POSTS_QUERY,
+} from '~/lib/queries';
+
+export async function getStaticPaths() {
+  const all = await fetchList<{ slug: string; lang: string }>(POST_PATHS_QUERY);
+  return all
+    .filter((p) => p.lang === 'ar' && p.slug)
+    .map((p) => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+
+const post = await fetchSanity<any>(POST_BY_SLUG_QUERY, { slug, lang: 'ar' }, null);
+
+if (!post) {
+  return Astro.redirect('/ar/blog/');
+}
+
+const related = await fetchList<any>(RELATED_POSTS_QUERY, { slug, lang: 'ar' });
+---
+
+<BlogPost lang="ar" post={post} related={related} />

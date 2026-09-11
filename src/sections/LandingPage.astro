@@ -1,0 +1,329 @@
+---
+/**
+ * A landing page built entirely in Sanity — /<slug>/ and /ar/<slug>/.
+ *
+ * How it works: a landing page document holds a list of "sections". Each
+ * section has a type (hero, rich text, feature grid, stat band, CTA banner,
+ * quote) and its own fields. This file walks that list and renders the
+ * matching block for each one.
+ *
+ * The practical effect: you can build a whole new page in the Studio —
+ * choose sections, fill them in, publish — and it appears on the site after
+ * the next build. No code changes needed.
+ *
+ * To add a NEW KIND of section you do need code: add it to the schema in
+ * studio-schemas/landingPage.js, then add a branch below.
+ */
+import Base from '~/layouts/Base.astro';
+import Icon from '~/components/Icon.astro';
+import Btn from '~/components/Btn.astro';
+import Tag from '~/components/Tag.astro';
+import Chip from '~/components/Chip.astro';
+import Reveal from '~/components/Reveal.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import RichText from '~/components/RichText.astro';
+import SanityImage from '~/components/SanityImage.astro';
+
+import { localePath, absoluteUrl, type Lang } from '~/lib/i18n';
+import { COMMON } from '~/content/site';
+import { urlFor } from '~/lib/sanity';
+import { truncate, portableTextToPlain } from '~/lib/format';
+import { breadcrumbSchema } from '~/lib/seo';
+
+export interface LandingPageData {
+  title: string;
+  slug: string;
+  sections?: any[];
+  seo?: { title?: string; description?: string; shareImage?: any };
+}
+
+interface Props {
+  lang: Lang;
+  page: LandingPageData;
+}
+
+const { lang, page } = Astro.props;
+const common = COMMON[lang];
+
+const sections: any[] = Array.isArray(page.sections) ? page.sections : [];
+
+/* The first hero's subheading, or the first paragraph of the first rich-text
+   block, becomes the meta description when no SEO description is set. */
+const firstHero = sections.find((s) => s._type === 'hero');
+const firstRich = sections.find((s) => s._type === 'richText');
+const description = truncate(
+  firstHero?.subheading || portableTextToPlain(firstRich?.body),
+  160,
+);
+
+const shareImage = page.seo?.shareImage?.asset
+  ? urlFor(page.seo.shareImage).width(1200).height(630).fit('crop').url()
+  : firstHero?.image?.asset
+    ? urlFor(firstHero.image).width(1200).height(630).fit('crop').url()
+    : null;
+
+const url = absoluteUrl(localePath(lang, page.slug), Astro.site);
+
+const schemas = [
+  breadcrumbSchema([
+    { name: common.breadcrumbHome, url: absoluteUrl(localePath(lang), Astro.site) },
+    { name: page.title, url },
+  ]),
+];
+
+const crumbs = [
+  { name: common.breadcrumbHome, href: localePath(lang) },
+  { name: page.title },
+];
+
+/* Alternating section backgrounds so consecutive blocks don't blur together. */
+const bg = (i: number) => (i % 2 === 0 ? 'vsec-light' : 'vsec-mid');
+
+/** True when this is the first hero — that one owns the page's single <h1>. */
+const isFirstHero = (section: any) => section === firstHero;
+---
+
+<Base
+  lang={lang}
+  path={page.slug}
+  title={page.title}
+  description={description}
+  seoTitle={page.seo?.title}
+  seoDescription={page.seo?.description}
+  seoImage={shareImage}
+  schemas={schemas}>
+  {
+    /* If the page has no hero, the title still needs to appear as an h1
+       somewhere — otherwise the page would have no top-level heading. */
+    !firstHero && (
+      <section class="vsec vsec-light" style="padding-bottom:0">
+        <div class="vc">
+          <Breadcrumbs items={crumbs} style="margin-bottom:20px" />
+          <h1 class="vh2">{page.title}</h1>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    sections.map((section, i) => {
+      switch (section._type) {
+        /* ------------------------------------------------------------ hero */
+        case 'hero': {
+          const Heading = isFirstHero(section) ? 'h1' : 'h2';
+          return (
+            <section
+              class="vsec"
+              style="background:#F5EDD8;padding:64px 0;position:relative;overflow:hidden">
+              <div class="vhero-deco">
+                <div
+                  class="vhero-blob"
+                  style="width:600px;height:600px;top:-250px;right:-120px"
+                />
+                <div
+                  class="vhero-blob2"
+                  style="width:280px;height:280px;bottom:-60px;left:160px"
+                />
+              </div>
+
+              <div class="vc" style="position:relative;z-index:2">
+                {isFirstHero(section) && (
+                  <Breadcrumbs items={crumbs} style="margin-bottom:20px" />
+                )}
+
+                <div class="g2" style="gap:48px;align-items:center">
+                  <div style="min-width:0">
+                    {section.eyebrow && (
+                      <Reveal>
+                        <Tag color="dark">{section.eyebrow}</Tag>
+                      </Reveal>
+                    )}
+                    <Reveal delay={100}>
+                      <Heading
+                        class="vh2"
+                        style="color:#335a32;margin:22px 0 20px;font-size:clamp(30px,5vw,50px)">
+                        {section.heading}
+                      </Heading>
+                    </Reveal>
+                    {section.subheading && (
+                      <Reveal delay={200}>
+                        <p class="vhero-sub">{section.subheading}</p>
+                      </Reveal>
+                    )}
+                    {(section.primaryCtaLabel || section.secondaryCtaLabel) && (
+                      <Reveal delay={300}>
+                        <div style="display:flex;gap:16px;flex-wrap:wrap">
+                          {section.primaryCtaLabel && (
+                            <Btn
+                              variant="lime"
+                              size="lg"
+                              href={section.primaryCtaHref || undefined}
+                              opensSignup={!section.primaryCtaHref}>
+                              {section.primaryCtaLabel}
+                            </Btn>
+                          )}
+                          {section.secondaryCtaLabel && (
+                            <Btn
+                              variant="outline"
+                              size="lg"
+                              href={section.secondaryCtaHref || undefined}
+                              opensSignup={!section.secondaryCtaHref}>
+                              {section.secondaryCtaLabel}
+                            </Btn>
+                          )}
+                        </div>
+                      </Reveal>
+                    )}
+                  </div>
+
+                  {section.image?.asset && (
+                    <Reveal delay={250}>
+                      <SanityImage
+                        image={section.image}
+                        alt={section.image.alt ?? ''}
+                        width={520}
+                        height={420}
+                        sizes="(max-width: 900px) 100vw, 520px"
+                        loading="eager"
+                        style="width:100%;height:auto;border-radius:24px;box-shadow:0 20px 60px rgba(51,90,50,0.18);display:block"
+                      />
+                    </Reveal>
+                  )}
+                </div>
+              </div>
+            </section>
+          );
+        }
+
+        /* -------------------------------------------------------- richText */
+        case 'richText':
+          return (
+            <section class:list={['vsec', bg(i)]}>
+              <div class="vc" style="max-width:800px">
+                <Reveal>
+                  <RichText value={section.body} />
+                </Reveal>
+              </div>
+            </section>
+          );
+
+        /* ----------------------------------------------------- featureGrid */
+        case 'featureGrid': {
+          const cols = section.columns === 2 ? 'g2' : section.columns === 4 ? 'g4' : 'g3';
+          return (
+            <section class:list={['vsec', bg(i)]}>
+              <div class="vc">
+                {(section.heading || section.subheading) && (
+                  <Reveal>
+                    <div class="vsec-head ctr" style="max-width:620px;margin:0 auto 48px">
+                      {section.eyebrow && <Tag color="green">{section.eyebrow}</Tag>}
+                      {section.heading && (
+                        <h2 class="vh2" style="margin-top:16px;margin-bottom:12px">
+                          {section.heading}
+                        </h2>
+                      )}
+                      {section.subheading && (
+                        <p style="color:var(--c-muted);margin:0;font-size:17px">
+                          {section.subheading}
+                        </p>
+                      )}
+                    </div>
+                  </Reveal>
+                )}
+
+                <div class={cols}>
+                  {(section.features ?? []).map((f: any, fi: number) => (
+                    <Reveal delay={fi * 100} style="display:flex">
+                      <div class="vcard vcard-hover vcard-ltop" style="flex:1">
+                        <Chip icon={f.icon || 'check_circle'} color="lime" />
+                        <h3 class="vh4" style="margin:18px 0 8px">{f.title}</h3>
+                        {f.description && (
+                          <p style="color:var(--c-muted);font-size:14px;margin:0;line-height:1.55">
+                            {f.description}
+                          </p>
+                        )}
+                      </div>
+                    </Reveal>
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        }
+
+        /* -------------------------------------------------------- statBand */
+        case 'statBand':
+          return (
+            <div class="vstatbar">
+              <div class="vstatbar-inner">
+                {(section.stats ?? []).map((s: any, si: number) => (
+                  <Reveal delay={si * 110} class="vstat-pop" style="text-align:center">
+                    <div class="vstat-num">{s.value}</div>
+                    <div class="vstat-lbl">{s.label}</div>
+                  </Reveal>
+                ))}
+              </div>
+            </div>
+          );
+
+        /* ------------------------------------------------------- ctaBanner */
+        case 'ctaBanner':
+          return (
+            <section class="vsec" style="background:#F5EDD8">
+              <div class="vc">
+                <Reveal>
+                  <div class="cta-banner" style="grid-template-columns:1fr">
+                    <div style="text-align:center">
+                      <h2 class="vh2" style="color:var(--c-green);margin:0 0 16px">
+                        {section.ctaHeading}
+                      </h2>
+                      {section.ctaBody && (
+                        <p style="font-size:18px;color:var(--c-muted);max-width:560px;margin:0 auto 32px;line-height:1.6">
+                          {section.ctaBody}
+                        </p>
+                      )}
+                      {section.ctaLabel && (
+                        <Btn
+                          variant="lime"
+                          size="lg"
+                          href={section.ctaHref || undefined}
+                          opensSignup={!section.ctaHref}>
+                          {section.ctaLabel}
+                        </Btn>
+                      )}
+                    </div>
+                  </div>
+                </Reveal>
+              </div>
+            </section>
+          );
+
+        /* ----------------------------------------------------------- quote */
+        case 'quote':
+          return (
+            <section class:list={['vsec', bg(i)]}>
+              <div class="vc" style="max-width:760px;text-align:center">
+                <Reveal>
+                  <figure style="margin:0">
+                    <Icon name="format_quote" size={44} color="var(--c-lime)" />
+                    <blockquote style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(20px,3vw,28px);line-height:1.45;color:var(--c-dark);margin:16px 0 24px;padding:0;border:none;font-weight:600">
+                      {section.quote}
+                    </blockquote>
+                    <figcaption style="color:var(--c-muted);font-size:15px">
+                      <strong style="color:var(--c-green)">{section.attribution}</strong>
+                      {section.attributionRole && <> · {section.attributionRole}</>}
+                    </figcaption>
+                  </figure>
+                </Reveal>
+              </div>
+            </section>
+          );
+
+        default:
+          // An unknown section type (e.g. added in Sanity but not yet here)
+          // is skipped rather than crashing the build.
+          return null;
+      }
+    })
+  }
+</Base>

@@ -1,0 +1,195 @@
+---
+/**
+ * A single white paper — /white-papers/[slug]/ and /ar/white-papers/[slug]/.
+ *
+ * Gives each paper a real, indexable landing page with a download button,
+ * rather than only a card on the listing. That's better for search: a PDF on
+ * its own ranks poorly, an HTML page describing it ranks well and then hands
+ * the visitor the file.
+ */
+import Base from '~/layouts/Base.astro';
+import Icon from '~/components/Icon.astro';
+import Btn from '~/components/Btn.astro';
+import Tag from '~/components/Tag.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import RichText from '~/components/RichText.astro';
+import SanityImage from '~/components/SanityImage.astro';
+
+import { localePath, absoluteUrl, type Lang } from '~/lib/i18n';
+import { WHITE_PAPERS } from '~/content/whitePapers';
+import { COMMON } from '~/content/site';
+import { formatMonthYear, isoDate, truncate } from '~/lib/format';
+import { urlFor } from '~/lib/sanity';
+import { breadcrumbSchema } from '~/lib/seo';
+
+export interface WhitePaperData {
+  title: string;
+  slug: string;
+  badge: string;
+  desc?: string;
+  body?: unknown;
+  date?: string;
+  fileUrl?: string | null;
+  fileSize?: number | null;
+  coverImage?: any;
+  seo?: { title?: string; description?: string; shareImage?: any };
+}
+
+interface Props {
+  lang: Lang;
+  paper: WhitePaperData;
+}
+
+const { lang, paper } = Astro.props;
+const t = WHITE_PAPERS[lang];
+const common = COMMON[lang];
+
+const path = 'white-papers/' + paper.slug;
+const url = absoluteUrl(localePath(lang, path), Astro.site);
+const description = truncate(paper.desc, 160);
+
+/* Same fallback chain as blog posts; generated cards are English-only. */
+let shareImage: string | null = null;
+if (paper.seo?.shareImage?.asset) {
+  shareImage = urlFor(paper.seo.shareImage).width(1200).height(630).fit('crop').url();
+} else if (paper.coverImage?.asset) {
+  shareImage = urlFor(paper.coverImage).width(1200).height(630).fit('crop').url();
+} else if (lang === 'en') {
+  shareImage = absoluteUrl('/og/en/white-papers/' + paper.slug + '.png', Astro.site);
+}
+
+const schemas = [
+  breadcrumbSchema([
+    { name: common.breadcrumbHome, url: absoluteUrl(localePath(lang), Astro.site) },
+    {
+      name: t.sectionTitle,
+      url: absoluteUrl(localePath(lang, 'white-papers'), Astro.site),
+    },
+    { name: paper.title, url },
+  ]),
+];
+
+const crumbs = [
+  { name: common.breadcrumbHome, href: localePath(lang) },
+  { name: t.sectionTitle, href: localePath(lang, 'white-papers') },
+  { name: paper.title },
+];
+
+/** Human-readable file size for the download button, e.g. "2.4 MB". */
+const sizeLabel = paper.fileSize
+  ? (paper.fileSize / 1024 / 1024).toFixed(1) + ' MB'
+  : null;
+---
+
+<Base
+  lang={lang}
+  path={path}
+  title={paper.title}
+  description={description}
+  seoTitle={paper.seo?.title}
+  seoDescription={paper.seo?.description}
+  seoImage={shareImage}
+  schemas={schemas}>
+  <article>
+    <header class="vsec" style="background:#F5EDD8;padding:48px 0 44px;position:relative;overflow:hidden">
+      <div
+        style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(133,19,29,0.08) 1.5px,transparent 1.5px);background-size:32px 32px">
+      </div>
+
+      <div class="vc" style="position:relative;z-index:1">
+        <Breadcrumbs items={crumbs} style="margin-bottom:20px" />
+
+        <div class="g2" style="gap:48px;align-items:center">
+          <div>
+            <Tag color="green">{paper.badge}</Tag>
+            <h1
+              class="vh2"
+              style="color:var(--c-dark);margin-top:18px;margin-bottom:16px;font-size:clamp(28px,5.5vw,44px)">
+              {paper.title}
+            </h1>
+            {
+              paper.desc && (
+                <p style="color:var(--c-muted);font-size:18px;line-height:1.65;margin:0 0 28px">
+                  {paper.desc}
+                </p>
+              )
+            }
+
+            <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:28px">
+              {
+                paper.date && (
+                  <span style="font-size:13px;color:var(--c-muted);display:flex;align-items:center;gap:5px">
+                    <Icon name="calendar_today" size={15} />
+                    <time datetime={isoDate(paper.date)}>
+                      {formatMonthYear(paper.date, lang)}
+                    </time>
+                  </span>
+                )
+              }
+              {
+                sizeLabel && (
+                  <span style="font-size:13px;color:var(--c-muted);display:flex;align-items:center;gap:5px">
+                    <Icon name="picture_as_pdf" size={15} />
+                    PDF · {sizeLabel}
+                  </span>
+                )
+              }
+            </div>
+
+            {
+              paper.fileUrl ? (
+                <Btn variant="lime" size="lg" icon="download" href={paper.fileUrl}>
+                  {t.downloadPdf}
+                </Btn>
+              ) : (
+                <Btn variant="lime" size="lg" icon="download" opensSignup>
+                  {t.downloadPdf}
+                </Btn>
+              )
+            }
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:center">
+            {
+              paper.coverImage?.asset ? (
+                <SanityImage
+                  image={paper.coverImage}
+                  alt=""
+                  width={440}
+                  height={560}
+                  sizes="(max-width: 900px) 70vw, 440px"
+                  loading="eager"
+                  style="width:100%;max-width:400px;height:auto;border-radius:16px;box-shadow:0 16px 48px rgba(7,24,16,0.18);display:block"
+                />
+              ) : (
+                <div
+                  class="vph"
+                  style="width:100%;max-width:360px;aspect-ratio:3/4;border-radius:20px">
+                  <Icon name="article" size={72} color="var(--c-lime)" />
+                </div>
+              )
+            }
+          </div>
+        </div>
+      </div>
+    </header>
+
+    {
+      Array.isArray(paper.body) && paper.body.length > 0 && (
+        <div class="vsec vsec-light">
+          <div class="vc" style="max-width:800px">
+            <RichText value={paper.body} />
+          </div>
+        </div>
+      )
+    }
+  </article>
+
+  <section class="vsec vsec-mid" style="padding:56px 0">
+    <div class="vc" style="text-align:center">
+      <Btn variant="outline" href={localePath(lang, 'white-papers')} lead="arrow_back">
+        {common.backToPapers}
+      </Btn>
+    </div>
+  </section>
+</Base>

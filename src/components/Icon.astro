@@ -1,0 +1,39 @@
+---
+/**
+ * A Material Symbols icon.
+ *
+ * Replaces the old React <V n="..." /> component. Purely presentational —
+ * it renders one <span> and ships no JavaScript.
+ *
+ *   <Icon name="arrow_forward" size={18} color="var(--c-lime)" />
+ */
+interface Props {
+  name: string;
+  size?: number;
+  color?: string;
+  class?: string;
+  style?: string;
+  /**
+   * Icons are decorative by default and hidden from screen readers.
+   * Pass a label when the icon is the only thing conveying meaning.
+   */
+  label?: string;
+}
+
+const { name, size, color, class: className, style, label } = Astro.props;
+
+const inline = [
+  size ? `font-size:${size}px` : '',
+  color ? `color:${color}` : '',
+  style ?? '',
+]
+  .filter(Boolean)
+  .join(';');
+---
+
+<span
+  class:list={['material-symbols-outlined', className]}
+  style={inline || undefined}
+  aria-hidden={label ? undefined : 'true'}
+  aria-label={label}
+  role={label ? 'img' : undefined}>{name}</span>

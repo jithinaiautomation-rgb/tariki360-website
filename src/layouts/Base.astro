@@ -1,0 +1,180 @@
+---
+/**
+ * The page shell every page uses.
+ *
+ * It owns the <html> element (so `lang` and `dir` are correct for Arabic),
+ * the <head>, the header and footer, and the two small bits of global
+ * behaviour: the scroll-reveal observer and the sign-up modal.
+ *
+ * Pages pass their SEO information straight through to <SEO>; see any page
+ * file for an example.
+ */
+import '~/styles/global.css';
+
+import SEO from '~/components/SEO.astro';
+import Nav from '~/components/Nav.astro';
+import Footer from '~/components/Footer.astro';
+import SignupModal from '~/components/react/SignupModal.tsx';
+
+import { dirFor, htmlLang, type Lang } from '~/lib/i18n';
+import { getSiteSettings, defaultShareImageUrl } from '~/lib/settings';
+import { COMMON } from '~/content/site';
+import { getGlobalCopy } from '~/lib/globalCopy';
+
+interface Props {
+  lang: Lang;
+  /** Bare page path, e.g. 'blog/my-post'. '' for the home page. */
+  path: string;
+
+  title: string;
+  description?: string;
+
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  seoImage?: string | null;
+
+  ogType?: 'website' | 'article';
+  publishedTime?: string;
+  modifiedTime?: string;
+  authorName?: string;
+
+  schemas?: Array<Record<string, unknown>>;
+  noindex?: boolean;
+}
+
+const {
+  lang,
+  path,
+  title,
+  description,
+  seoTitle,
+  seoDescription,
+  seoImage,
+  ogType,
+  publishedTime,
+  modifiedTime,
+  authorName,
+  schemas = [],
+  noindex,
+} = Astro.props;
+
+const settings = await getSiteSettings();
+const defaultImage = defaultShareImageUrl(settings, Astro.site);
+const common = COMMON[lang];
+// `toast` is a function and props are JSON-serialised when an island
+// hydrates, so it is stripped here and kept inside the component.
+const { toast: _toast, ...modalCopy } = (await getGlobalCopy(lang)).modal;
+---
+
+<!doctype html>
+<html lang={htmlLang(lang)} dir={dirFor(lang)}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+
+    {/*
+      Marks the page as JavaScript-capable before anything paints, which is
+      what arms the scroll-reveal animation (see `.js .rv` in global.css).
+      Without JS this never runs and all content simply shows immediately.
+    */}
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    {/* Fonts. `display=block` keeps the icon font from flashing as text. */}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&family=Cairo:wght@400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block"
+      rel="stylesheet"
+    />
+
+    <SEO
+      lang={lang}
+      path={path}
+      title={title}
+      description={description}
+      seoTitle={seoTitle}
+      seoDescription={seoDescription}
+      seoImage={seoImage}
+      siteName={settings.siteName}
+      defaultDescription={settings.defaultDescription}
+      defaultImage={defaultImage}
+      ogType={ogType}
+      publishedTime={publishedTime}
+      modifiedTime={modifiedTime}
+      authorName={authorName}
+      schemas={schemas}
+      noindex={noindex}
+    />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">{common.skipToContent}</a>
+
+    <div style="min-height:100vh;display:flex;flex-direction:column">
+      <Nav lang={lang} path={path} />
+
+      <main id="main" style="flex:1">
+        <slot />
+      </main>
+
+      <Footer lang={lang} socialLinks={settings.socialLinks} />
+    </div>
+
+    {/*
+      The sign-up modal. `client:idle` means React is downloaded only after
+      the browser has finished the important work of rendering the page —
+      the modal isn't needed until someone clicks something.
+    */}
+    <SignupModal lang={lang} copy={modalCopy} client:idle />
+
+    <script>
+      // One shared observer drives every .rv scroll-reveal element on the
+      // page. The old React version created one observer per element.
+      const revealAll = (els: NodeListOf<Element> | Element[]) =>
+        els.forEach((el) => el.classList.add('in'));
+
+      const reveal = () => {
+        const els = document.querySelectorAll('.rv:not(.in)');
+        if (!els.length) return;
+
+        if (!('IntersectionObserver' in window)) {
+          revealAll(els);
+          return;
+        }
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('in');
+                observer.unobserve(entry.target);
+              }
+            }
+          },
+          { threshold: 0.15 },
+        );
+
+        els.forEach((el) => observer.observe(el));
+
+        // Safety net: if the observer hasn't reported anything a few seconds
+        // in — which can happen in odd embedding contexts where the viewport
+        // reports zero height — show everything rather than leave the page
+        // looking empty. Content visibility must never depend on an animation.
+        window.setTimeout(() => {
+          const stuck = document.querySelectorAll('.rv:not(.in)');
+          if (stuck.length === els.length) {
+            observer.disconnect();
+            revealAll(stuck);
+          }
+        }, 3000);
+      };
+
+      reveal();
+    </script>
+  </body>
+</html>

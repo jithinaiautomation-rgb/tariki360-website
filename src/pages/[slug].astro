@@ -1,0 +1,33 @@
+---
+/**
+ * English Sanity-built landing pages  →  /<slug>/
+ *
+ * This is the route that makes "create a new page without touching code"
+ * work. getStaticPaths asks Sanity for every English landing page and Astro
+ * writes one HTML file per result.
+ *
+ * Hand-built pages (/services/, /blog/ …) always win over a landing page with
+ * the same slug — Astro prefers a static route, and we filter those slugs out
+ * here as well so the clash is obvious rather than silent.
+ */
+import LandingPage from '~/sections/LandingPage.astro';
+import { fetchList, fetchSanity } from '~/lib/sanity';
+import { LANDING_PATHS_QUERY, LANDING_BY_SLUG_QUERY } from '~/lib/queries';
+import { isReserved } from '~/lib/reserved';
+
+export async function getStaticPaths() {
+  const all = await fetchList<{ slug: string; lang: string }>(LANDING_PATHS_QUERY);
+  return all
+    .filter((p) => p.lang === 'en' && p.slug && !isReserved(p.slug))
+    .map((p) => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+const page = await fetchSanity<any>(LANDING_BY_SLUG_QUERY, { slug, lang: 'en' }, null);
+
+if (!page) {
+  return Astro.redirect('/');
+}
+---
+
+<LandingPage lang="en" page={page} />

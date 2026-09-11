@@ -1,0 +1,100 @@
+---
+/**
+ * Site footer.
+ *
+ * In the old React site the footer links were <a> tags with onClick handlers
+ * that all went to the Contact page. Here each one points at the page it
+ * actually names, which is both more useful and better for internal linking.
+ *
+ * Social links come from the Sanity site settings document, so you can add
+ * or change them without touching code.
+ */
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import logo from '~/assets/images/logo.png';
+import { localePath, type Lang } from '~/lib/i18n';
+import { getGlobalCopy } from '~/lib/globalCopy';
+import type { SocialLink } from '~/lib/seo';
+
+interface Props {
+  lang: Lang;
+  socialLinks?: SocialLink[];
+}
+
+const { lang, socialLinks = [] } = Astro.props;
+// Footer headings, link labels and the small print come from Sanity;
+// the link targets stay in code so an edit can't break routing.
+const t = (await getGlobalCopy(lang)).footer;
+
+/** Maps a platform name from Sanity onto a Material Symbols icon. */
+const SOCIAL_ICONS: Record<string, string> = {
+  linkedin: 'work',
+  instagram: 'photo_camera',
+  facebook: 'groups',
+  x: 'chat',
+  twitter: 'chat',
+  youtube: 'smart_display',
+  tiktok: 'music_note',
+  whatsapp: 'chat_bubble',
+  website: 'public',
+};
+---
+
+<footer class="vfooter">
+  <div class="vc">
+    <div class="vfooter-grid">
+      <div>
+        <Image
+          src={logo}
+          alt="Tariki 360"
+          height={44}
+          width={Math.round((44 * logo.width) / logo.height)}
+          loading="lazy"
+          style="height:44px;width:auto;display:block;filter:brightness(0) invert(1);margin-bottom:14px"
+        />
+        <p class="vfooter-copy">
+          {t.copyLine1}<br />{t.copyLine2}
+        </p>
+
+        {
+          socialLinks.length > 0 && (
+            <div class="vfooter-social">
+              {socialLinks
+                .filter((s) => s.url)
+                .map((s) => (
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.platform ?? 'Social profile'}>
+                    <Icon
+                      name={SOCIAL_ICONS[(s.platform ?? '').toLowerCase()] ?? 'public'}
+                      size={19}
+                    />
+                  </a>
+                ))}
+            </div>
+          )
+        }
+      </div>
+
+      {
+        t.cols.map((col) => (
+          <div>
+            <h6>{col.heading}</h6>
+            <ul>
+              {col.items.map((item) => (
+                <li>
+                  <a href={localePath(lang, item.path)}>{item.label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+
+    <hr />
+    <p class="vfooter-bottom">{t.bottom}</p>
+  </div>
+</footer>

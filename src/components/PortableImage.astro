@@ -1,0 +1,34 @@
+---
+/**
+ * Renders an image that an editor dropped into the middle of a blog post
+ * or white paper body.
+ *
+ * astro-portabletext hands the raw block through as `node`.
+ */
+import SanityImage from './SanityImage.astro';
+
+interface Props {
+  node: {
+    asset?: { _ref?: string };
+    alt?: string;
+    caption?: string;
+  };
+}
+
+const { node } = Astro.props;
+---
+
+{
+  node?.asset && (
+    <figure>
+      <SanityImage
+        image={node}
+        alt={node.alt ?? ''}
+        width={720}
+        height={405}
+        sizes="(max-width: 760px) 100vw, 720px"
+      />
+      {node.caption && <figcaption>{node.caption}</figcaption>}
+    </figure>
+  )
+}

@@ -1,0 +1,77 @@
+# AWS Amplify Hosting build specification.
+#
+# Amplify reads this file from the repository root and follows it on every
+# deploy. The result is a folder of plain HTML, CSS, images and JavaScript
+# that Amplify serves from its CDN — there is no server running.
+#
+# Before your first deploy, add these environment variables in the Amplify
+# console (App settings → Environment variables):
+#
+#   PUBLIC_SANITY_PROJECT_ID   your Sanity project id
+#   PUBLIC_SANITY_DATASET      production
+#   PUBLIC_SITE_URL            https://www.yourdomain.com   (no trailing slash)
+#
+# PUBLIC_SITE_URL matters more than it looks: canonical URLs, sitemap.xml,
+# robots.txt and every social share tag are built from it. Point it at the
+# real domain, not the amplifyapp.com preview URL.
+
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        # Astro 5 needs Node 18.17+; pin to 20 so the build doesn't depend on
+        # whatever the build image happens to default to.
+        - nvm use 20 || nvm install 20
+        - node --version
+        # `npm ci` installs exactly what package-lock.json specifies —
+        # reproducible, and faster than `npm install`.
+        - npm ci
+    build:
+      commands:
+        - npm run build
+
+  artifacts:
+    # Everything Astro wrote to dist/ becomes the deployed site.
+    baseDirectory: dist
+    files:
+      - '**/*'
+
+  cache:
+    paths:
+      - node_modules/**/*
+      - .astro/**/*
+
+# ---------------------------------------------------------------------------
+# Caching and security headers.
+#
+# Files under /_astro/ have a content hash in their filename, so a change
+# produces a new filename — they can be cached forever. HTML must not be
+# cached hard, or visitors would keep seeing an old page after you publish.
+# ---------------------------------------------------------------------------
+customHeaders:
+  - pattern: '/_astro/**'
+    headers:
+      - key: Cache-Control
+        value: 'public, max-age=31536000, immutable'
+
+  - pattern: '/og/**'
+    headers:
+      - key: Cache-Control
+        value: 'public, max-age=31536000, immutable'
+
+  - pattern: '**/*.html'
+    headers:
+      - key: Cache-Control
+        value: 'public, max-age=0, must-revalidate'
+
+  - pattern: '**'
+    headers:
+      - key: X-Content-Type-Options
+        value: 'nosniff'
+      - key: X-Frame-Options
+        value: 'SAMEORIGIN'
+      - key: Referrer-Policy
+        value: 'strict-origin-when-cross-origin'
+      - key: Strict-Transport-Security
+        value: 'max-age=31536000; includeSubDomains'

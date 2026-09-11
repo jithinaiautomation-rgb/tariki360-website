@@ -1,0 +1,35 @@
+---
+/**
+ * Renders Sanity "Portable Text" — the rich text an editor writes in the
+ * Studio — as real HTML.
+ *
+ * Portable Text is stored as structured JSON rather than an HTML string,
+ * which is what lets us decide here how each piece should look. Images
+ * inside the body get the same WebP + width/height treatment as everywhere
+ * else, so they don't cause layout shift either.
+ *
+ * The `.prose-tariki` class in global.css styles the resulting headings,
+ * paragraphs, lists, quotes and links.
+ */
+import { PortableText } from 'astro-portabletext';
+import PortableImage from './PortableImage.astro';
+
+interface Props {
+  value: unknown;
+  class?: string;
+}
+
+const { value, class: className } = Astro.props;
+const hasContent = Array.isArray(value) && value.length > 0;
+---
+
+{
+  hasContent && (
+    <div class:list={['prose-tariki', className]}>
+      <PortableText
+        value={value as never}
+        components={{ type: { image: PortableImage } }}
+      />
+    </div>
+  )
+}

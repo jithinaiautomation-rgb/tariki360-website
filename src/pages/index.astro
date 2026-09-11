@@ -1,0 +1,11 @@
+---
+/**
+ * English home page  →  /
+ *
+ * Page files under src/pages/ are thin: they pick a language and hand off to
+ * the shared section component. The Arabic twin lives at src/pages/ar/index.astro.
+ */
+import HomePage from '~/sections/HomePage.astro';
+---
+
+<HomePage lang="en" />

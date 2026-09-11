@@ -1,0 +1,17 @@
+---
+/** Rounded square icon tile. Replaces the old React <Chip>. */
+import Icon from './Icon.astro';
+
+interface Props {
+  icon: string;
+  color?: 'lime' | 'green' | 'gold' | 'dark';
+  class?: string;
+  style?: string;
+}
+
+const { icon, color = 'lime', class: className, style } = Astro.props;
+---
+
+<div class:list={['vchip', `vchip-${color}`, className]} style={style}>
+  <Icon name={icon} />
+</div>

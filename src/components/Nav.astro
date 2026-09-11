@@ -1,0 +1,130 @@
+---
+/**
+ * Site header.
+ *
+ * Fully static HTML — the nav links are real <a> tags, so they work without
+ * JavaScript and search engines can crawl them. The only script is a ~10 line
+ * inline toggle for the mobile menu, which is far lighter than shipping React
+ * for a menu button.
+ *
+ * The language button is a link to the same page in the other language,
+ * which is exactly what the old client-side toggle did — except now the
+ * destination is a real, indexable page.
+ */
+import { Image } from 'astro:assets';
+import Btn from './Btn.astro';
+import Icon from './Icon.astro';
+import logo from '~/assets/images/logo.png';
+import { localePath, type Lang } from '~/lib/i18n';
+import { NAV_ITEMS } from '~/content/site';
+import { getGlobalCopy } from '~/lib/globalCopy';
+
+interface Props {
+  lang: Lang;
+  /** Bare path of the current page, e.g. 'services'. '' for home. */
+  path: string;
+}
+
+const { lang, path } = Astro.props;
+
+// Nav labels and the login button text come from the 'globalSettings'
+// document in Sanity, falling back to src/content/site.ts.
+const global = await getGlobalCopy(lang);
+const labels = global.navLabels;
+const t = global.navText;
+const otherLang: Lang = lang === 'en' ? 'ar' : 'en';
+
+/** The same page, in the other language. */
+const switchHref = localePath(otherLang, path);
+
+/** A nav item is "on" when its path matches the current page. */
+const isActive = (itemPath: string) =>
+  itemPath === path || (itemPath !== '' && path.startsWith(`${itemPath}/`));
+---
+
+<nav class="vnav" id="site-nav">
+  <div class="vc vnav-inner">
+    <a
+      class="vnav-logo"
+      href={localePath(lang)}
+      aria-label={lang === 'ar' ? 'طريقي 360 — الصفحة الرئيسية' : 'Tariki 360 — home'}>
+      <Image
+        src={logo}
+        alt="Tariki 360"
+        height={40}
+        width={Math.round((40 * logo.width) / logo.height)}
+        loading="eager"
+        style="height:40px;width:auto;display:block;mix-blend-mode:multiply"
+      />
+    </a>
+
+    <div class="vnav-links">
+      {
+        NAV_ITEMS.map((item) => (
+          <a
+            class:list={['vnav-link', isActive(item.path) && 'on']}
+            href={localePath(lang, item.path)}
+            aria-current={isActive(item.path) ? 'page' : undefined}>
+            {labels[item.key]}
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="vnav-actions">
+      <a
+        class="vlang-toggle"
+        href={switchHref}
+        lang={otherLang}
+        hreflang={otherLang}
+        aria-label={lang === 'en' ? 'التبديل إلى العربية' : 'Switch to English'}>
+        {t.switchTo}
+      </a>
+      <Btn size="sm" opensSignup>{t.login}</Btn>
+      <button
+        class="vnav-toggle"
+        id="nav-toggle"
+        type="button"
+        aria-label={t.menu}
+        aria-expanded="false"
+        aria-controls="nav-menu">
+        <Icon name="menu" size={26} class="nav-icon-open" />
+        <Icon name="close" size={26} class="nav-icon-close" style="display:none" />
+      </button>
+    </div>
+  </div>
+
+  <div class="vc vnav-menu" id="nav-menu">
+    {
+      NAV_ITEMS.map((item) => (
+        <a
+          class:list={['vnav-link', isActive(item.path) && 'on']}
+          href={localePath(lang, item.path)}
+          aria-current={isActive(item.path) ? 'page' : undefined}>
+          {labels[item.key]}
+        </a>
+      ))
+    }
+    <a class="vlang-toggle vlang-toggle-mobile" href={switchHref} hreflang={otherLang}>
+      {lang === 'en' ? 'عربي' : 'English'}
+    </a>
+    <Btn size="sm" opensSignup style="margin-top:8px;width:100%">
+      {t.login}
+    </Btn>
+  </div>
+</nav>
+
+<script>
+  // Mobile menu toggle. Ten lines of vanilla JS instead of a React island.
+  const nav = document.getElementById('site-nav');
+  const toggle = document.getElementById('nav-toggle');
+
+  toggle?.addEventListener('click', () => {
+    const open = nav?.classList.toggle('open') ?? false;
+    toggle.setAttribute('aria-expanded', String(open));
+    const iconOpen = toggle.querySelector<HTMLElement>('.nav-icon-open');
+    const iconClose = toggle.querySelector<HTMLElement>('.nav-icon-close');
+    if (iconOpen) iconOpen.style.display = open ? 'none' : '';
+    if (iconClose) iconClose.style.display = open ? '' : 'none';
+  });
+</script>

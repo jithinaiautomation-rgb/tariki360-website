@@ -1,0 +1,187 @@
+---
+/** About page, in one language. Rendered at /about/ and /ar/about/. */
+import { Image } from 'astro:assets';
+
+import Base from '~/layouts/Base.astro';
+import Icon from '~/components/Icon.astro';
+import Btn from '~/components/Btn.astro';
+import Tag from '~/components/Tag.astro';
+import Chip from '~/components/Chip.astro';
+import Reveal from '~/components/Reveal.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+
+import aboutImg from '~/assets/images/about.png';
+
+import { localePath, absoluteUrl, type Lang } from '~/lib/i18n';
+import { ABOUT } from '~/content/about';
+import { pageCopy } from '~/lib/pageCopy';
+import { COMMON } from '~/content/site';
+import { breadcrumbSchema } from '~/lib/seo';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+// Page wording comes from the 'pageAbout' document in Sanity, laid over
+// the built-in copy. See src/lib/pageCopy.ts.
+const t = await pageCopy('pageAbout', lang, ABOUT[lang]);
+const common = COMMON[lang];
+
+const crumbs = [
+  { name: common.breadcrumbHome, href: localePath(lang) },
+  { name: t.title },
+];
+
+const schemas = [
+  breadcrumbSchema([
+    { name: common.breadcrumbHome, url: absoluteUrl(localePath(lang), Astro.site) },
+    { name: t.title, url: absoluteUrl(localePath(lang, 'about'), Astro.site) },
+  ]),
+];
+---
+
+<Base
+  lang={lang}
+  path="about"
+  title={t.metaTitle}
+  description={t.metaDescription}
+  seoTitle={t.seo?.title}
+  seoDescription={t.seo?.description}
+  seoImage={t.seo?.image}
+  schemas={schemas}>
+  <section class="vsec vsec-light">
+    <div class="vc" style="padding-bottom:0">
+      <Breadcrumbs items={crumbs} style="margin-bottom:24px" />
+    </div>
+    <div class="vc g2" style="align-items:center;gap:60px">
+      <Reveal>
+        <div>
+          <Tag color="green">{t.storyTag}</Tag>
+          <h1 class="vh2" style="margin-top:20px;margin-bottom:18px;font-size:clamp(28px,7vw,52px)">
+            {t.title}
+          </h1>
+          <p style="color:var(--c-muted);font-size:17px;line-height:1.7;max-width:500px;margin:0 0 28px">
+            {t.introLead}<strong>{t.introStrong1}</strong>{t.introMid}<strong>{t.introStrong2}</strong>{t.introTrail}
+          </p>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:36px">
+            <div style="width:40px;height:4px;background:var(--c-lime);border-radius:2px"></div>
+            <em style="color:var(--c-muted);font-size:15px">{t.tagline}</em>
+          </div>
+          <Btn variant="lime" href={localePath(lang, 'contact')}>{t.getInTouch}</Btn>
+        </div>
+      </Reveal>
+
+      <Reveal delay={200}>
+        <div style="display:flex;align-items:center;justify-content:center">
+          <Image
+            src={aboutImg}
+            alt={t.heroImgAlt}
+            widths={[520, 1040]}
+            sizes="(max-width: 900px) 100vw, 520px"
+            format="webp"
+            quality={80}
+            style="width:100%;max-width:520px;height:auto;display:block;border-radius:20px;box-shadow:0 8px 40px rgba(7,24,16,0.12)"
+          />
+        </div>
+      </Reveal>
+    </div>
+  </section>
+
+  {/* ---- What is Tariki 360? ---- */}
+  <section class="vsec vsec-light">
+    <div class="vc g2" style="gap:56px;align-items:flex-start">
+      <Reveal>
+        <div>
+          <Tag color="green">{t.initiativeTag}</Tag>
+          <h2 class="vh2" style="margin-top:16px;margin-bottom:20px">{t.whatIsTitle}</h2>
+          <p style="color:var(--c-muted);line-height:1.7;margin:0 0 18px;font-size:17px">
+            {t.whatIsP1}
+          </p>
+          <p style="color:var(--c-muted);line-height:1.7;margin:0;font-size:17px">{t.whatIsP2}</p>
+        </div>
+      </Reveal>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <Reveal delay={140}>
+          <div class="vcard vcard-ltop" style="padding:28px">
+            <Chip icon="lightbulb" color="lime" />
+            <h3 class="vh4" style="margin:14px 0 8px">{t.clarityTitle}</h3>
+            <p style="margin:0;color:var(--c-muted);font-size:15px;line-height:1.55">
+              {t.clarityDesc}
+            </p>
+          </div>
+        </Reveal>
+        <Reveal delay={260}>
+          <div class="vcard" style="padding:28px;border-top:4px solid var(--c-gold)">
+            <Chip icon="trending_up" color="gold" />
+            <h3 class="vh4" style="margin:14px 0 8px">{t.growthTitle}</h3>
+            <p style="margin:0;color:var(--c-muted);font-size:15px;line-height:1.55">
+              {t.growthDesc}
+            </p>
+          </div>
+        </Reveal>
+      </div>
+    </div>
+  </section>
+
+  {/* ---- Partners ---- */}
+  <section class="vsec vsec-mid">
+    <div class="vc">
+      <Reveal>
+        <div class="vsec-head ctr">
+          <Tag color="green">{t.partnersTag}</Tag>
+          <h2 class="vh2" style="margin-top:16px;margin-bottom:0">{t.partnersTitle}</h2>
+        </div>
+      </Reveal>
+      <div class="g2">
+        {
+          t.partners.map(([name, meta, desc], i) => (
+            <Reveal delay={i * 150} style="display:flex">
+              <div class="vcard vcard-ltop vcard-hover" style="flex:1">
+                <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:800;font-size:22px;color:var(--c-green);margin:0 0 6px">
+                  {name}
+                </h3>
+                <div class="vlbl" style="color:var(--c-muted);margin-bottom:18px">{meta}</div>
+                <p style="color:var(--c-muted);line-height:1.65;margin:0">{desc}</p>
+              </div>
+            </Reveal>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  {/* ---- Board of directors ---- */}
+  <section class="vsec vsec-mid">
+    <div class="vc">
+      <Reveal>
+        <div style="text-align:center;margin-bottom:56px">
+          <Tag color="green">{t.leadershipTag}</Tag>
+          <h2 class="vh2" style="margin-top:16px;margin-bottom:10px">{t.boardTitle}</h2>
+          <p style="color:var(--c-muted);margin:0">{t.boardSubtitle}</p>
+        </div>
+      </Reveal>
+      <div class="g2" style="gap:24px;max-width:860px;margin:0 auto">
+        {
+          t.board.map((member, i) => (
+            <Reveal delay={i * 150} style="display:flex">
+              <div class="vcard" style="padding:36px;text-align:center;flex:1">
+                <div style="width:96px;height:96px;border-radius:50%;background:var(--c-lime-dim);border:3px solid rgba(157,227,20,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+                  <Icon name="account_circle" size={56} color="var(--c-green)" />
+                </div>
+                <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:20px;margin:0 0 6px">
+                  {member.name}
+                </h3>
+                <div class="vlbl" style="color:var(--c-muted);margin-bottom:14px">{member.role}</div>
+                <p style="color:var(--c-muted);font-size:15px;line-height:1.6;margin:0">
+                  {member.desc}
+                </p>
+              </div>
+            </Reveal>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Base>

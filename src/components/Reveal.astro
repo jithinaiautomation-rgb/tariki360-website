@@ -1,0 +1,30 @@
+---
+/**
+ * Fade-and-rise-on-scroll wrapper.
+ *
+ * The old site did this with a React component that created its own
+ * IntersectionObserver per element. Here it's just a <div class="rv">;
+ * a single shared observer in the base layout adds `.in` when the element
+ * scrolls into view. Same effect, no React, no per-element observer.
+ *
+ * Respects prefers-reduced-motion via the CSS in global.css.
+ */
+interface Props {
+  /** Stagger, in milliseconds. */
+  delay?: number;
+  class?: string;
+  style?: string;
+  /** Render as a different element, e.g. "section". */
+  as?: string;
+}
+
+const { delay = 0, class: className, style, as: Tag = 'div' } = Astro.props;
+
+const inline = [delay ? `transition-delay:${delay}ms` : '', style ?? '']
+  .filter(Boolean)
+  .join(';');
+---
+
+<Tag class:list={['rv', className]} style={inline || undefined}>
+  <slot />
+</Tag>

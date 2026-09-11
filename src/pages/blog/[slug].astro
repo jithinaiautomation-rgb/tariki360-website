@@ -1,0 +1,39 @@
+---
+/**
+ * One English blog post  →  /blog/<slug>/
+ *
+ * getStaticPaths is the important bit. Astro calls it at BUILD time; it asks
+ * Sanity for every English post's slug and returns one entry per post. Astro
+ * then renders this file once per entry and writes a finished HTML file for
+ * each. Nothing is fetched in the browser.
+ *
+ * Add a post in Sanity → rebuild → a new HTML file appears.
+ */
+import BlogPost from '~/sections/BlogPost.astro';
+import { fetchList, fetchSanity } from '~/lib/sanity';
+import {
+  POST_PATHS_QUERY,
+  POST_BY_SLUG_QUERY,
+  RELATED_POSTS_QUERY,
+} from '~/lib/queries';
+
+export async function getStaticPaths() {
+  const all = await fetchList<{ slug: string; lang: string }>(POST_PATHS_QUERY);
+  return all
+    .filter((p) => p.lang === 'en' && p.slug)
+    .map((p) => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+
+const post = await fetchSanity<any>(POST_BY_SLUG_QUERY, { slug, lang: 'en' }, null);
+
+/* getStaticPaths only produced slugs that exist, so this is a safety net. */
+if (!post) {
+  return Astro.redirect('/blog/');
+}
+
+const related = await fetchList<any>(RELATED_POSTS_QUERY, { slug, lang: 'en' });
+---
+
+<BlogPost lang="en" post={post} related={related} />

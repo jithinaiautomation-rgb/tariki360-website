@@ -1,0 +1,306 @@
+---
+/** Benefits page, in one language. Rendered at /benefits/ and /ar/benefits/. */
+import { Image } from 'astro:assets';
+
+import Base from '~/layouts/Base.astro';
+import Icon from '~/components/Icon.astro';
+import Btn from '~/components/Btn.astro';
+import Tag from '~/components/Tag.astro';
+import Chip from '~/components/Chip.astro';
+import Reveal from '~/components/Reveal.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+
+import studentGirlImg from '~/assets/images/student-girl.png';
+import aiMentorImg from '~/assets/images/ai-mentor.png';
+
+import { localePath, absoluteUrl, type Lang } from '~/lib/i18n';
+import { BENEFITS } from '~/content/benefits';
+import { pageCopy } from '~/lib/pageCopy';
+import { COMMON } from '~/content/site';
+import { breadcrumbSchema } from '~/lib/seo';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+// Page wording comes from the 'pageBenefits' document in Sanity, laid over
+// the built-in copy. See src/lib/pageCopy.ts.
+const t = await pageCopy('pageBenefits', lang, BENEFITS[lang]);
+const common = COMMON[lang];
+
+const crumbs = [
+  { name: common.breadcrumbHome, href: localePath(lang) },
+  { name: t.metaTitle },
+];
+
+const schemas = [
+  breadcrumbSchema([
+    { name: common.breadcrumbHome, url: absoluteUrl(localePath(lang), Astro.site) },
+    { name: t.metaTitle, url: absoluteUrl(localePath(lang, 'benefits'), Astro.site) },
+  ]),
+];
+---
+
+<Base
+  lang={lang}
+  path="benefits"
+  title={t.metaTitle}
+  description={t.metaDescription}
+  seoTitle={t.seo?.title}
+  seoDescription={t.seo?.description}
+  seoImage={t.seo?.image}
+  schemas={schemas}>
+  {/* ---- Hero ---- */}
+  <section class="vsec vsec-mid">
+    <div class="vc" style="padding-bottom:0">
+      <Breadcrumbs items={crumbs} style="margin-bottom:24px" />
+    </div>
+    <div class="vc g2" style="align-items:center;gap:60px">
+      <Reveal>
+        <div>
+          <Tag color="lime" icon="stars">{t.heroTag}</Tag>
+          <h1 class="vh2" style="font-size:clamp(28px,7vw,54px);margin-top:20px;margin-bottom:18px">
+            {t.heroTitle}
+          </h1>
+          <p style="color:var(--c-muted);font-size:18px;line-height:1.65;max-width:480px;margin:0 0 34px">
+            {t.heroSubtitle}
+          </p>
+          <div style="display:flex;gap:16px;margin-bottom:44px;flex-wrap:wrap">
+            <Btn variant="lime" icon="arrow_forward" opensSignup>{t.startAssessment}</Btn>
+            <Btn variant="outline" href={localePath(lang, 'contact')}>{t.institutionalDemo}</Btn>
+          </div>
+          <div style="display:flex;gap:52px;flex-wrap:wrap">
+            {
+              t.stats.map(([num, label]) => (
+                <div>
+                  <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:800;font-size:34px;color:var(--c-green);letter-spacing:-0.02em">
+                    {num}
+                  </div>
+                  <div style="font-size:13px;color:var(--c-muted);margin-top:5px;font-weight:500">
+                    {label}
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </Reveal>
+
+      <Reveal delay={200}>
+        <div style="display:flex;align-items:center;justify-content:center">
+          <Image
+            src={studentGirlImg}
+            alt={t.heroImgAlt}
+            widths={[420, 840]}
+            sizes="(max-width: 900px) 100vw, 420px"
+            format="webp"
+            quality={80}
+            style="width:100%;max-width:420px;height:auto;display:block;filter:drop-shadow(0 12px 32px rgba(7,24,16,0.12))"
+          />
+        </div>
+      </Reveal>
+    </div>
+  </section>
+
+  {/* ---- Empowering every stakeholder ---- */}
+  <section class="vsec vsec-light">
+    <div class="vc">
+      <Reveal>
+        <div style="text-align:center;margin-bottom:56px">
+          <Tag color="green">{t.benefitsTag}</Tag>
+          <h2 class="vh2" style="margin-top:16px;margin-bottom:14px">{t.benefitsTitle}</h2>
+          <p style="color:var(--c-muted);font-size:18px;max-width:560px;margin:0 auto;line-height:1.65">
+            {t.benefitsSubtitle}
+          </p>
+        </div>
+      </Reveal>
+
+      {/* AI career mentor */}
+      <Reveal delay={120}>
+        <div class="vcard" style="padding:0;overflow:hidden;border-radius:24px;margin-bottom:24px">
+          <div class="g2" style="gap:0">
+            <div style="background:#EAF2F8;display:flex;align-items:center;justify-content:center;min-height:300px;position:relative;overflow:hidden">
+              <Image
+                src={aiMentorImg}
+                alt={t.aiMentorImgAlt}
+                widths={[600, 1200]}
+                sizes="(max-width: 900px) 100vw, 600px"
+                format="webp"
+                quality={80}
+                style="width:100%;height:100%;object-fit:cover;display:block;mix-blend-mode:multiply"
+              />
+            </div>
+            <div style="padding:44px;display:flex;flex-direction:column;justify-content:center">
+              <Tag color="gold">{t.aiFeatureTag}</Tag>
+              <h3 class="vh3" style="margin:18px 0 12px;font-size:32px">{t.aiMentorTitle}</h3>
+              <p style="color:var(--c-muted);line-height:1.65;margin:0 0 28px;font-size:16px">
+                {t.aiMentorDesc}
+              </p>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                {
+                  t.aiMentorFeatures.map(([icon, label]) => (
+                    <div style="display:flex;align-items:center;gap:14px">
+                      <div style="width:40px;height:40px;border-radius:50%;background:var(--c-lime-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <Icon name={icon} size={20} color="var(--c-green)" />
+                      </div>
+                      <span style="font-weight:600;font-size:15px">{label}</span>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </Reveal>
+
+      {/* Students & parents */}
+      <div class="g2" style="gap:32px;align-items:flex-start">
+        <Reveal delay={100}>
+          <div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+              <div style="width:4px;height:32px;background:var(--c-lime);border-radius:2px;flex-shrink:0"></div>
+              <h3 class="vh4" style="margin:0;color:var(--c-green);font-size:24px">{t.forStudents}</h3>
+            </div>
+            <div class="g2" style="gap:14px">
+              {
+                t.studentCards.map(([icon, title, desc]) => (
+                  <div class="vcard vcard-hover" style="padding:24px;border-radius:16px">
+                    <Chip icon={icon} color="lime" />
+                    <h4 style="margin:12px 0 6px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:15px">
+                      {title}
+                    </h4>
+                    <p style="margin:0;font-size:13px;color:var(--c-muted);line-height:1.55">{desc}</p>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </Reveal>
+
+        <Reveal delay={220}>
+          <div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+              <div style="width:4px;height:32px;background:var(--c-gold);border-radius:2px;flex-shrink:0"></div>
+              <h3 class="vh4" style="margin:0;color:var(--c-gold);font-size:24px">{t.forParents}</h3>
+            </div>
+            <div class="g2" style="gap:14px">
+              {
+                t.parentCards.map(([icon, title, desc]) => (
+                  <div class="vcard vcard-hover" style="padding:24px;border-radius:16px">
+                    <div class="vchip vchip-gold"><Icon name={icon} /></div>
+                    <h4 style="margin:12px 0 6px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:15px">
+                      {title}
+                    </h4>
+                    <p style="margin:0;font-size:13px;color:var(--c-muted);line-height:1.55">{desc}</p>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </div>
+  </section>
+
+  {/* ---- Before / after ---- */}
+  <section class="vsec vsec-light">
+    <div class="vc">
+      <Reveal>
+        <div class="vsec-head ctr">
+          <Tag color="green">{t.transformationTag}</Tag>
+          <h2 class="vh2" style="margin-top:16px;margin-bottom:10px">{t.transformationTitle}</h2>
+          <p style="color:var(--c-muted);margin:0">{t.transformationSubtitle}</p>
+        </div>
+      </Reveal>
+      <div class="g2" style="gap:40px">
+        <Reveal delay={100}>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+              <Icon name="cancel" size={22} color="var(--c-red)" />
+              <h3 class="vlbl" style="color:var(--c-red);margin:0">{t.beforeLabel}</h3>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              {
+                t.before.map(([title, desc]) => (
+                  <div class="vba vba-before">
+                    <h4 style="margin:0 0 5px;font-size:16px;font-weight:700;color:var(--c-red)">
+                      {title}
+                    </h4>
+                    <p>{desc}</p>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </Reveal>
+        <Reveal delay={220}>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+              <Icon name="check_circle" size={22} color="var(--c-lime)" />
+              <h3 class="vlbl" style="color:var(--c-green);margin:0">{t.afterLabel}</h3>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              {
+                t.after.map(([title, desc]) => (
+                  <div class="vba vba-after">
+                    <h4 style="margin:0 0 5px;font-size:16px;font-weight:700;color:var(--c-green)">
+                      {title}
+                    </h4>
+                    <p>{desc}</p>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </div>
+  </section>
+
+  {/* ---- Institutional ---- */}
+  <section class="vsec" style="background:#F5EDD8">
+    <div class="vc g2" style="gap:60px;align-items:flex-start">
+      <Reveal>
+        <div>
+          <Tag color="green">{t.instTag}</Tag>
+          <h2 class="vh2" style="color:var(--c-dark);margin-top:20px;margin-bottom:18px">
+            {t.instTitle}
+          </h2>
+          <p style="color:var(--c-muted);font-size:17px;line-height:1.65;margin:0 0 28px">
+            {t.instSubtitle}
+          </p>
+          <ul style="list-style:none;padding:0;margin:0 0 34px;display:flex;flex-direction:column;gap:14px">
+            {
+              t.instList.map((item) => (
+                <li style="display:flex;gap:12px;align-items:flex-start">
+                  <Icon name="check_circle" size={20} color="var(--c-green)" />
+                  <span style="color:var(--c-dark);font-size:16px">{item}</span>
+                </li>
+              ))
+            }
+          </ul>
+          <Btn variant="lime" href={localePath(lang, 'contact')}>{t.requestAccess}</Btn>
+        </div>
+      </Reveal>
+
+      <div class="g2" style="gap:14px">
+        {
+          t.grid.map(([icon, title, desc], i) => (
+            <Reveal delay={120 + i * 90} style="display:flex">
+              <div
+                class="vcard"
+                style="padding:24px;border-radius:16px;background:#fff;border:1.5px solid rgba(12,77,28,0.10);flex:1">
+                <Chip icon={icon} color="green" />
+                <h3 style="margin:14px 0 6px;color:var(--c-dark);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:600;font-size:15px">
+                  {title}
+                </h3>
+                <p style="margin:0;font-size:13px;color:var(--c-muted);line-height:1.5">{desc}</p>
+              </div>
+            </Reveal>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Base>

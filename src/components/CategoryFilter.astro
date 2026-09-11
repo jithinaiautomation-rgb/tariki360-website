@@ -1,0 +1,87 @@
+---
+/**
+ * The category filter pills above the blog / white-paper grids.
+ *
+ * Deliberately NOT a React island. Every card is rendered into the static
+ * HTML by Astro — which is what lets search engines see all of them — and
+ * this filter just shows and hides those existing cards. That's DOM work,
+ * not state-driven rendering, so a few lines of vanilla JS does it without
+ * shipping a framework.
+ *
+ * Without JavaScript, all cards stay visible. Nothing is lost.
+ *
+ * The grid it controls must have `data-filter-grid` and each card must carry
+ * `data-category="<name>"`.
+ */
+interface Props {
+  /** Label for the "show everything" pill. */
+  allLabel: string;
+  /** The distinct category names found in the content. */
+  categories: string[];
+  /** CSS selector for the grid this filter controls. */
+  target: string;
+}
+
+const { allLabel, categories, target } = Astro.props;
+---
+
+{
+  categories.length > 0 && (
+    <div
+      class="vfilter"
+      role="group"
+      aria-label={allLabel}
+      data-filter-target={target}
+      style="display:flex;gap:8px;flex-wrap:wrap">
+      <button
+        type="button"
+        class="vfilter-btn is-active"
+        data-category="*"
+        aria-pressed="true"
+        style="padding:7px 14px;border-radius:999px;border:1.5px solid rgba(157,227,20,.3);background:var(--c-lime-dim);color:var(--c-green);font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer">
+        {allLabel}
+      </button>
+      {categories.map((c) => (
+        <button
+          type="button"
+          class="vfilter-btn"
+          data-category={c}
+          aria-pressed="false"
+          style="padding:7px 14px;border-radius:999px;border:1.5px solid rgba(157,227,20,.3);background:transparent;color:var(--c-muted);font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer">
+          {c}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-filter-target]').forEach((group) => {
+    const selector = group.dataset.filterTarget;
+    if (!selector) return;
+
+    const grid = document.querySelector<HTMLElement>(selector);
+    if (!grid) return;
+
+    const buttons = group.querySelectorAll<HTMLButtonElement>('.vfilter-btn');
+
+    group.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.vfilter-btn');
+      if (!btn) return;
+
+      const wanted = btn.dataset.category ?? '*';
+
+      buttons.forEach((b) => {
+        const active = b === btn;
+        b.classList.toggle('is-active', active);
+        b.setAttribute('aria-pressed', String(active));
+        b.style.background = active ? 'var(--c-lime-dim)' : 'transparent';
+        b.style.color = active ? 'var(--c-green)' : 'var(--c-muted)';
+      });
+
+      grid.querySelectorAll<HTMLElement>('[data-category]').forEach((card) => {
+        card.hidden = wanted !== '*' && card.dataset.category !== wanted;
+      });
+    });
+  });
+</script>

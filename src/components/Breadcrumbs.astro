@@ -1,0 +1,41 @@
+---
+/**
+ * The Home › Blog › This Article trail.
+ *
+ * Renders the visible breadcrumb; the matching BreadcrumbList JSON-LD is
+ * built separately by the page and handed to <SEO>, so the two always
+ * describe the same trail.
+ */
+import Icon from './Icon.astro';
+
+export interface Crumb {
+  name: string;
+  /** Site-relative href. Omit on the final crumb (the current page). */
+  href?: string;
+}
+
+interface Props {
+  items: Crumb[];
+  class?: string;
+  style?: string;
+}
+
+const { items, class: className, style } = Astro.props;
+---
+
+<nav aria-label="Breadcrumb" class={className} style={style}>
+  <ol class="vcrumbs">
+    {
+      items.map((item, i) => (
+        <li>
+          {i > 0 && <Icon name="chevron_right" size={16} class="vcrumbs-sep" />}
+          {item.href ? (
+            <a href={item.href}>{item.name}</a>
+          ) : (
+            <span aria-current="page">{item.name}</span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

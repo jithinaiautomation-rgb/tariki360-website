@@ -1,0 +1,64 @@
+---
+/**
+ * A button or link styled as a button.
+ *
+ * Replaces the old React <Btn>. Because most "buttons" on this site actually
+ * navigate somewhere, this renders a real <a> when given an `href` — which
+ * is better for accessibility and lets search engines follow the link.
+ * Without an href it renders a <button>, optionally wired to open the
+ * sign-up modal via `data-open-signup`.
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  href?: string;
+  variant?: 'lime' | 'ghost' | 'outline' | 'white';
+  size?: 'sm' | 'md' | 'lg';
+  /** Trailing icon name. */
+  icon?: string;
+  /** Leading icon name. */
+  lead?: string;
+  class?: string;
+  style?: string;
+  /** Renders a <button> that opens the sign-up modal when clicked. */
+  opensSignup?: boolean;
+  type?: 'button' | 'submit';
+  id?: string;
+}
+
+const {
+  href,
+  variant = 'lime',
+  size = 'md',
+  icon,
+  lead,
+  class: className,
+  style,
+  opensSignup = false,
+  type = 'button',
+  id,
+} = Astro.props;
+
+const classes = ['vbtn', `vbtn-${size}`, `vbtn-${variant}`, className];
+---
+
+{
+  href ? (
+    <a href={href} class:list={classes} style={style} id={id}>
+      {lead && <Icon name={lead} size={18} />}
+      <slot />
+      {icon && <Icon name={icon} size={18} />}
+    </a>
+  ) : (
+    <button
+      type={type}
+      class:list={classes}
+      style={style}
+      id={id}
+      data-open-signup={opensSignup ? '' : undefined}>
+      {lead && <Icon name={lead} size={18} />}
+      <slot />
+      {icon && <Icon name={icon} size={18} />}
+    </button>
+  )
+}
