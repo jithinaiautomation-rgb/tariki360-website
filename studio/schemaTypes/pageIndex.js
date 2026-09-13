@@ -48,9 +48,9 @@ export default defineType({
   fieldsets: [
     {
       name: 'headline',
-      title: 'Headline',
+      title: "Headline (H1 — the page's main heading for Google)",
       description:
-        'The big heading is built from three parts: line 1, then line 2 made of a plain start followed by a part highlighted in red.',
+        'The big heading at the top of the page, and the only H1 on it. Google treats it as the main topic of the page, so keep it clear and include what the page is about. It is built from three parts: line 1, then line 2 made of a plain start followed by a part highlighted in red.',
     },
     { name: 'heroButtons', title: 'Buttons' },
     { name: 'badges', title: 'Floating badges on the picture' },
