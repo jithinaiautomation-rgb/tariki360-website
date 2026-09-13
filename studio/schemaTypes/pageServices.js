@@ -1,194 +1,132 @@
 import { defineField, defineType } from 'sanity';
-import { structuredDataField } from './structuredData';
+import {
+  featureFields,
+  list,
+  oldFormat,
+  paragraph,
+  requiredText,
+  seoFields,
+  text,
+  unusedField,
+} from './pageFields';
 
 /**
- * Services Page
- *
- * One document holding the wording for this page. The website reads it at
- * build time and lays it over its built-in copy, so any field you leave
- * blank simply keeps the default text — nothing breaks if a field is empty.
- *
- * Fields marked "(advanced)" hold a JSON list as raw text. Edit the words
- * inside the quotes and leave the brackets and commas alone; if the JSON
- * ends up invalid the site ignores that one field and uses its built-in copy.
- *
- * This schema was generated from the documents already in the dataset, so it
- * matches the existing content exactly.
+ * Services Page — laid out to match the page, one tab per section from top to
+ * bottom. See pageFields.js for how text boxes and lists behave.
  */
+
+const tickRow = [defineField({ name: 'label', title: 'Text', type: 'localeString', validation: requiredText })];
+
 export default defineType({
   name: 'pageServices',
   title: 'Services Page',
   type: 'document',
-  fields: [
-    defineField({
-      name: 'seo',
-      title: 'SEO & sharing',
-      description:
-        'Optional. Overrides how this page appears in Google and when shared. Leave blank to use the page headline and intro.',
-      type: 'seoLocale',
-    }),
-    structuredDataField(),
-    defineField({
-      name: 'forInstitutionsBtn',
-      title: 'For Institutions Btn',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'forStudents',
-      title: 'For Students',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'getStarted',
-      title: 'Get Started',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'heroSubtitle',
-      title: 'Hero Subtitle',
-      type: 'localeText',
-    }),
-    defineField({
-      name: 'heroTitle',
-      title: 'Hero Title',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'instSubtitle',
-      title: 'Inst Subtitle',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'instTag',
-      title: 'Inst Tag',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'instTitle',
-      title: 'Inst Title',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'inst_json',
-      title: 'Inst (advanced)',
-      type: 'text',
-      rows: 6,
-      description:
-        'Advanced: a JSON list, stored as text, in the form {"en":[...],"ar":[...]}. Keep the structure exactly as it is and change only the wording inside the quotes. A mistake here is ignored by the site, which falls back to its built-in copy.',
-    }),
-    defineField({
-      name: 'oneTime',
-      title: 'One Time',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'premiumBenefits',
-      title: 'Premium Benefits',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'requestDemo',
-      title: 'Request Demo',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'successSubtitle',
-      title: 'Success Subtitle',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'successTag',
-      title: 'Success Tag',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'successTitle',
-      title: 'Success Title',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'testimonials_json',
-      title: 'Testimonials (advanced)',
-      type: 'text',
-      rows: 6,
-      description:
-        'Advanced: a JSON list, stored as text, in the form {"en":[...],"ar":[...]}. Keep the structure exactly as it is and change only the wording inside the quotes. A mistake here is ignored by the site, which falls back to its built-in copy.',
-    }),
-    defineField({
-      name: 'tier1Desc',
-      title: 'Tier1 Desc',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'tier1Label',
-      title: 'Tier1 Label',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'tier1Price',
-      title: 'Tier1 Price',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'tier1Title',
-      title: 'Tier1 Title',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'tier1_json',
-      title: 'Tier1 (advanced)',
-      type: 'text',
-      rows: 6,
-      description:
-        'Advanced: a JSON list, stored as text, in the form {"en":[...],"ar":[...]}. Keep the structure exactly as it is and change only the wording inside the quotes. A mistake here is ignored by the site, which falls back to its built-in copy.',
-    }),
-    defineField({
-      name: 'tier2Desc',
-      title: 'Tier2 Desc',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'tier2Label',
-      title: 'Tier2 Label',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'tier2Price',
-      title: 'Tier2 Price',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'tier2Title',
-      title: 'Tier2 Title',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'tier2_json',
-      title: 'Tier2 (advanced)',
-      type: 'text',
-      rows: 6,
-      description:
-        'Advanced: a JSON list, stored as text, in the form {"en":[...],"ar":[...]}. Keep the structure exactly as it is and change only the wording inside the quotes. A mistake here is ignored by the site, which falls back to its built-in copy.',
-    }),
-    defineField({
-      name: 'videoTestimonialsTitle',
-      title: 'Video Testimonials Title',
-      type: 'localeString',
-    }),
-    defineField({
-      name: 'videoTestimonials_json',
-      title: 'Video Testimonials (advanced)',
-      type: 'text',
-      rows: 6,
-      description:
-        'Advanced: a JSON list, stored as text, in the form {"en":[...],"ar":[...]}. Keep the structure exactly as it is and change only the wording inside the quotes. A mistake here is ignored by the site, which falls back to its built-in copy.',
-    }),
-    defineField({
-      name: 'viewProcess',
-      title: 'View Process',
-      type: 'localeString',
-    }),
+
+  groups: [
+    { name: 'hero', title: '1. Top banner', default: true },
+    { name: 'plans', title: '2. Price cards' },
+    { name: 'institutions', title: '3. For institutions' },
+    { name: 'stories', title: '4. Success stories' },
+    { name: 'seo', title: 'SEO & schema' },
   ],
+
+  fieldsets: [
+    { name: 'heroButtons', title: 'Buttons' },
+    { name: 'shared', title: 'Used on both cards', description: 'These words appear on the left card and on the right card.' },
+    { name: 'tier1', title: 'Left card' },
+    { name: 'tier2', title: 'Right card (premium, green)' },
+    { name: 'instHeading', title: 'Section heading' },
+  ],
+
+  fields: [
+    /* ------------------------------------------------------ 1. Top banner */
+    text('heroTitle', 'Heading', 'The big heading at the top of the page.', 'hero'),
+    paragraph('heroSubtitle', 'Text under the heading', undefined, 'hero'),
+    text('forStudents', 'First button (red)', 'Opens the sign-up form.', 'hero', 'heroButtons'),
+    text('forInstitutionsBtn', 'Second button (outline)', 'Scrolls down to the "For institutions" section.', 'hero', 'heroButtons'),
+
+    /* ----------------------------------------------------- 2. Price cards */
+    text('oneTime', 'Word next to each price', 'e.g. "one-time"', 'plans', 'shared'),
+    text('getStarted', 'Red button on each card', 'Opens the sign-up form.', 'plans', 'shared'),
+    text('viewProcess', 'Second button on each card', 'Links to the Benefits page.', 'plans', 'shared'),
+
+    text('tier1Label', 'Small text above the title', 'e.g. "Instant, AI-powered insights"', 'plans', 'tier1'),
+    text('tier1Title', 'Plan name', 'e.g. "Career Path Finder"', 'plans', 'tier1'),
+    text('tier1Desc', 'Description', undefined, 'plans', 'tier1'),
+    text('tier1Price', 'Price', 'e.g. "AED 599". Has an Arabic box in case Arabic writes it differently.', 'plans', 'tier1'),
+    list({
+      name: 'tier1',
+      title: 'What is included (tick list)',
+      description: 'One row per point. Each gets a tick icon automatically.',
+      group: 'plans',
+      fieldset: 'tier1',
+      itemName: 'tickItem',
+      itemTitle: 'Point',
+      titleKey: 'label',
+      fields: tickRow,
+    }),
+    oldFormat('tier1_json', 'plans', 'tier1'),
+
+    text('tier2Label', 'Small text above the title', 'e.g. "Go deeper. Get clearer."', 'plans', 'tier2'),
+    text('tier2Title', 'Plan name', 'e.g. "Career Champion"', 'plans', 'tier2'),
+    text('tier2Desc', 'Description', undefined, 'plans', 'tier2'),
+    text('tier2Price', 'Price', 'e.g. "AED 899"', 'plans', 'tier2'),
+    text('premiumBenefits', 'Label above the tick list', 'e.g. "Premium benefits"', 'plans', 'tier2'),
+    list({
+      name: 'tier2',
+      title: 'What is included (tick list)',
+      description: 'One row per point. Each gets a tick icon automatically.',
+      group: 'plans',
+      fieldset: 'tier2',
+      itemName: 'tickItem',
+      itemTitle: 'Point',
+      titleKey: 'label',
+      fields: tickRow,
+    }),
+    oldFormat('tier2_json', 'plans', 'tier2'),
+
+    /* ----------------------------------------------- 3. For institutions */
+    text('instTag', 'Small label', 'e.g. "For institutions"', 'institutions', 'instHeading'),
+    text('instTitle', 'Heading', undefined, 'institutions', 'instHeading'),
+    text('instSubtitle', 'Text under the heading', undefined, 'institutions', 'instHeading'),
+    list({
+      name: 'inst',
+      title: 'Cards',
+      description: 'The icon + title + description cards.',
+      group: 'institutions',
+      itemName: 'featureItem',
+      itemTitle: 'Card',
+      titleKey: 'title',
+      plainKey: 'icon',
+      fields: featureFields(),
+    }),
+    oldFormat('inst_json', 'institutions'),
+    text('requestDemo', 'Button below the cards', 'Links to the Contact page.', 'institutions'),
+
+    /* ------------------------------------------------ 4. Success stories */
+    text('successTag', 'Small label', 'e.g. "Success stories"', 'stories'),
+    text(
+      'successTitle',
+      'Heading',
+      'The written testimonials themselves are edited in "Testimonials" in the sidebar.',
+      'stories',
+    ),
+    text('successSubtitle', 'Text under the heading', undefined, 'stories'),
+    text(
+      'videoTestimonialsTitle',
+      'Heading above the video testimonials',
+      'The videos themselves are edited in "Video Testimonials" in the sidebar.',
+      'stories',
+    ),
+    // Older copies of the testimonials. The page reads the Testimonials and
+    // Video Testimonials documents instead, so these are kept but hidden.
+    unusedField('testimonials_json'),
+    unusedField('videoTestimonials_json'),
+
+    /* ------------------------------------------------------ SEO & schema */
+    ...seoFields(),
+  ],
+
   preview: {
     prepare: () => ({ title: 'Services Page' }),
   },

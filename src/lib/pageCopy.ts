@@ -119,11 +119,16 @@ function resolveJsonField(raw: unknown, lang: Lang, label: string): unknown {
 
 /* ---- Lists ------------------------------------------------------------- */
 
-type ListPart = { field: string; locale: boolean };
-type ListSpec = { parts: ListPart[]; build?: (values: string[], index: number) => unknown };
+type ListPart = { field: string; locale: boolean; optional?: boolean };
+type ListSpec = {
+  parts: ListPart[];
+  build?: (values: Array<string | null>, index: number) => unknown;
+};
 
 const loc = (field: string): ListPart => ({ field, locale: true });
 const plain = (field: string): ListPart => ({ field, locale: false });
+/** A plain part that may be empty; it resolves to null instead of dropping the row. */
+const plainOptional = (field: string): ListPart => ({ field, locale: false, optional: true });
 const featureParts = [plain('icon'), loc('title'), loc('description')];
 
 /**
@@ -150,6 +155,35 @@ const LIST_SPECS: Record<string, Record<string, ListSpec>> = {
     careerInterestList: { parts: [loc('name'), plain('percent')] },
     faqs: { parts: [loc('question'), loc('answer')] },
   },
+  pageServices: {
+    // The tick lists never showed their icon, so rows store text only and
+    // the template's [icon, text] shape is filled in here.
+    tier1: { parts: [loc('label')], build: ([label]) => ['check_circle', label] },
+    tier2: { parts: [loc('label')], build: ([label]) => ['check_circle', label] },
+    inst: { parts: featureParts },
+  },
+  pageBenefits: {
+    stats: { parts: [loc('value'), loc('label')] },
+    aiMentorFeatures: { parts: [plain('icon'), loc('label')] },
+    studentCards: { parts: featureParts },
+    parentCards: { parts: featureParts },
+    before: { parts: [loc('title'), loc('description')] },
+    after: { parts: [loc('title'), loc('description')] },
+    grid: { parts: featureParts },
+  },
+  pageAbout: {
+    partners: { parts: [loc('name'), loc('meta'), loc('description')] },
+    board: {
+      parts: [loc('name'), loc('role'), loc('description')],
+      build: ([name, role, desc]) => ({ name, role, desc }),
+    },
+  },
+  pageContact: {
+    routes: { parts: featureParts },
+    // The phone/email is optional: rows like the office address have none.
+    info: { parts: [plain('icon'), loc('title'), loc('description'), plainOptional('action')] },
+    langs: { parts: [plain('code'), loc('label')] },
+  },
 };
 
 /**
@@ -166,7 +200,7 @@ function resolveList(value: unknown, spec: ListSpec, lang: Lang): unknown[] | un
   for (const item of value) {
     if (!item || typeof item !== 'object') continue;
     const row = item as Record<string, unknown>;
-    const values: string[] = [];
+    const values: Array<string | null> = [];
     for (const part of spec.parts) {
       const raw = row[part.field];
       const v = part.locale
@@ -176,7 +210,11 @@ function resolveList(value: unknown, spec: ListSpec, lang: Lang): unknown[] | un
         : typeof raw === 'string' && raw.trim()
           ? raw.trim()
           : null;
-      if (!v) break;
+      if (!v) {
+        if (!part.optional) break;
+        values.push(null);
+        continue;
+      }
       values.push(v);
     }
     if (values.length !== spec.parts.length) continue;

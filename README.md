@@ -119,17 +119,11 @@ Each field has an **English** and an **العربية (Arabic)** box:
   ships with. It does **not** fall back to the other language, so an
   untranslated field never shows English text on the Arabic page.
 
-**Fields marked "(advanced)"** on the Services, Benefits, About and Contact
-pages still hold a list stored as raw JSON text. Edit the words inside the
-quotes and leave the brackets, quotes and commas exactly as they are. If the
-JSON ends up invalid, the site ignores that one field and uses its built-in
-copy, so a slip can't break the page, but your edit won't show up. The Home
-Page no longer has any of these; see below.
+### The page editors
 
-### The Home Page editor
-
-The Home Page is laid out the same way as the page itself. There's one tab per
-section, numbered in the order they appear from top to bottom:
+The Home, Services, Benefits, About and Contact pages are each laid out the
+same way as the page itself. There's one tab per section, numbered in the order
+they appear from top to bottom. The Home Page tabs:
 
 | Tab | What's in it |
 | --- | ------------ |
@@ -145,6 +139,27 @@ section, numbered in the order they appear from top to bottom:
 | 10. FAQs | The questions |
 | 11. Bottom call to action | Heading, text and buttons |
 | SEO & schema | Search and sharing overrides and structured data |
+
+The other four pages follow the same pattern:
+
+| Page | Tabs |
+| ---- | ---- |
+| Services | 1. Top banner · 2. Price cards · 3. For institutions · 4. Success stories · SEO & schema |
+| Benefits | 1. Top banner · 2. Benefits intro & AI mentor · 3. Students & parents cards · 4. Before & after · 5. For institutions · SEO & schema |
+| About | 1. Top banner · 2. What is Tariki 360 · 3. Partners · 4. Board of directors · SEO & schema |
+| Contact | 1. Top banner · 2. Three cards · 3. Contact form · 4. Contact details & map · 5. Newsletter strip · SEO & schema |
+
+A few page-specific notes:
+
+- **Services:** the words shared by both price cards ("one-time" and the two
+  button labels) are edited once, under *Used on both cards*. The tick lists
+  add their tick icons automatically.
+- **About:** the *Intro paragraph* is the paragraph under the heading. The two
+  *names shown in bold* are bolded wherever they appear in it, so spell them
+  exactly as they are written in the paragraph.
+- **Contact:** each form field has its label and its grey example text grouped
+  together. In *Contact details*, a phone number or email becomes a tap-to-call
+  or email link; leave that box empty for rows like the office address.
 
 Every field says what it is and where it appears. Some things are edited
 elsewhere, and the field description points there: the video in **Home Video
@@ -165,13 +180,13 @@ normally leaves the plain start empty.
 **One-time migration.** The lists used to be single JSON text boxes, and your
 current rows are still in those old boxes. Until they're moved, the site keeps
 showing them and the new lists start empty. The old boxes sit read-only under
-each list, labelled *Old format*. To move everything into the lists, run this
-from `studio/`:
+each list, labelled *Old format*. To move everything into the lists on all
+five pages at once, run this from `studio/`:
 
 ```bash
 npx sanity login
-npx sanity exec scripts/migrate-home-lists.js --with-user-token -- --dry-run
-npx sanity exec scripts/migrate-home-lists.js --with-user-token
+npx sanity exec scripts/migrate-page-lists.js --with-user-token -- --dry-run
+npx sanity exec scripts/migrate-page-lists.js --with-user-token
 ```
 
 The first command logs you in. The `--dry-run` command prints what it would

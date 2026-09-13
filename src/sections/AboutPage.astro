@@ -28,6 +28,23 @@ const { lang } = Astro.props;
 const t = await pageCopy('pageAbout', lang, ABOUT[lang]);
 const common = COMMON[lang];
 
+/* The intro paragraph comes from Sanity as one piece of text ("Intro
+   paragraph" in the Studio), with the two partner names shown in bold wherever
+   they appear in it. Without that text, the built-in version is used. */
+const introText = (t as { intro?: unknown }).intro;
+const introParts = (() => {
+  if (typeof introText !== 'string' || !introText.trim()) return null;
+  const names = [t.introStrong1, t.introStrong2].filter(
+    (n): n is string => typeof n === 'string' && n.trim().length > 0,
+  );
+  if (names.length === 0) return [{ text: introText, bold: false }];
+  const escaped = names.map((n) => n.replace(/[.*+?^()|[\]\{}$]/g, '\$&'));
+  return introText
+    .split(new RegExp('(' + escaped.join('|') + ')'))
+    .filter((piece) => piece.length > 0)
+    .map((piece) => ({ text: piece, bold: names.includes(piece) }));
+})();
+
 const crumbs = [
   { name: common.breadcrumbHome, href: localePath(lang) },
   { name: t.title },
@@ -63,7 +80,15 @@ const schemas = [
             {t.title}
           </h1>
           <p style="color:var(--c-muted);font-size:17px;line-height:1.7;max-width:500px;margin:0 0 28px">
-            {t.introLead}<strong>{t.introStrong1}</strong>{t.introMid}<strong>{t.introStrong2}</strong>{t.introTrail}
+            {
+              introParts ? (
+                introParts.map((part) => (part.bold ? <strong>{part.text}</strong> : part.text))
+              ) : (
+                <>
+                  {t.introLead}<strong>{t.introStrong1}</strong>{t.introMid}<strong>{t.introStrong2}</strong>{t.introTrail}
+                </>
+              )
+            }
           </p>
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:36px">
             <div style="width:40px;height:4px;background:var(--c-lime);border-radius:2px"></div>
