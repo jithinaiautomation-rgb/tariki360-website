@@ -29,7 +29,7 @@ export const NAV_LABELS: Record<Lang, Record<NavKey, string>> = {
     about: 'About',
     resources: 'Resources',
     blog: 'Blog',
-    social: 'Social Media',
+    social: 'Media',
     contact: 'Contact',
   },
   ar: {
@@ -39,7 +39,7 @@ export const NAV_LABELS: Record<Lang, Record<NavKey, string>> = {
     about: 'من نحن',
     resources: 'الموارد',
     blog: 'المدونة',
-    social: 'التواصل الاجتماعي',
+    social: 'الإعلام',
     contact: 'تواصل معنا',
   },
 };

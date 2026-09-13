@@ -102,7 +102,7 @@ export default defineType({
     text('followSubtitle', 'Text under the heading', undefined, 'follow'),
 
     /* --------------------------------------------------------------- Menu */
-    text('navLabel', 'Name in the top menu', 'e.g. "Social Media". Leave empty to keep the built-in name.', 'menu'),
+    text('navLabel', 'Name in the top menu', 'e.g. "Media". Leave empty to keep the built-in name.', 'menu'),
 
     /* ------------------------------------------------------ SEO & schema */
     ...seoFields(),

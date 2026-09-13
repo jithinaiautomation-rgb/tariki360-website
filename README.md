@@ -285,7 +285,7 @@ the top of the blog page. Tick it on only one post per language.
 
 ### Social Media page
 
-The **Social Media** page (`/social-media/`, in the menu after Blog) shows your
+The **Social Media** page (`/social-media/`, called **Media** in the menu, after Blog) shows your
 social media links as cards.
 
 **Add a link:** Studio → **Social Media Page** → **2. Social media links** →
