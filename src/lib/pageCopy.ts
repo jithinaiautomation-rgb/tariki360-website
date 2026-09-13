@@ -117,27 +117,72 @@ function resolveJsonField(raw: unknown, lang: Lang, label: string): unknown {
   return undefined;
 }
 
+/* ---- Lists ------------------------------------------------------------- */
+
+type ListPart = { field: string; locale: boolean };
+type ListSpec = { parts: ListPart[]; build?: (values: string[], index: number) => unknown };
+
+const loc = (field: string): ListPart => ({ field, locale: true });
+const plain = (field: string): ListPart => ({ field, locale: false });
+const featureParts = [plain('icon'), loc('title'), loc('description')];
+
 /**
- * Resolve a question-and-answer list (e.g. the home page `faqs` field) into
- * the `[question, answer]` pairs the templates use.
- *
- * An item is included for a language only when BOTH its question and answer
- * exist in that language — so a question translated into English but not yet
- * Arabic appears on the English page only, never with English text on the
- * Arabic page. Returns undefined when nothing qualifies, which keeps the
- * fallback copy.
+ * Lists edited in Sanity as one row per item, by document type. Each resolves
+ * into the shape the page template already uses: a tuple of the listed parts
+ * in order, or whatever `build` returns. These replaced the older `*_json`
+ * text boxes, and win over them whenever they have rows.
  */
-function resolveQaList(value: unknown, lang: Lang): Array<[string, string]> | undefined {
+const LIST_SPECS: Record<string, Record<string, ListSpec>> = {
+  pageIndex: {
+    heroFeats: { parts: [plain('icon'), loc('label')] },
+    stats: { parts: [loc('value'), loc('label')] },
+    feats: { parts: featureParts },
+    schoolFeatures: { parts: featureParts },
+    journey: {
+      parts: featureParts,
+      // The template expects { n: icon, num: step number, t: title, d: text }.
+      build: ([n, t, d], index) => ({ n, num: index + 1, t, d }),
+    },
+    reportItems: { parts: [plain('icon'), loc('label')] },
+    topCareerList: { parts: [loc('name'), plain('percent')] },
+    strengthList: { parts: [loc('name'), plain('percent')] },
+    cohortStats: { parts: [loc('value'), loc('label')] },
+    careerInterestList: { parts: [loc('name'), plain('percent')] },
+    faqs: { parts: [loc('question'), loc('answer')] },
+  },
+};
+
+/**
+ * Resolve one list for one language.
+ *
+ * A row is included only when every part has a value in that language (plain
+ * parts such as icons and percentages are shared by both), so a row that is
+ * translated into English but not yet Arabic appears on the English page only.
+ * Returns undefined when no row qualifies, which keeps the fallback copy.
+ */
+function resolveList(value: unknown, spec: ListSpec, lang: Lang): unknown[] | undefined {
   if (!Array.isArray(value)) return undefined;
-  const pairs: Array<[string, string]> = [];
+  const out: unknown[] = [];
   for (const item of value) {
     if (!item || typeof item !== 'object') continue;
-    const { question, answer } = item as Record<string, unknown>;
-    const q = isLocale(question) ? localeText(question, lang) : null;
-    const a = isLocale(answer) ? localeText(answer, lang) : null;
-    if (q && a) pairs.push([q, a]);
+    const row = item as Record<string, unknown>;
+    const values: string[] = [];
+    for (const part of spec.parts) {
+      const raw = row[part.field];
+      const v = part.locale
+        ? isLocale(raw)
+          ? localeText(raw, lang)
+          : null
+        : typeof raw === 'string' && raw.trim()
+          ? raw.trim()
+          : null;
+      if (!v) break;
+      values.push(v);
+    }
+    if (values.length !== spec.parts.length) continue;
+    out.push(spec.build ? spec.build(values, out.length) : values);
   }
-  return pairs.length > 0 ? pairs : undefined;
+  return out.length > 0 ? out : undefined;
 }
 
 /** The SEO overrides for one page, already resolved to this language. */
@@ -213,10 +258,12 @@ export async function pageCopy<T extends object>(
   // The SEO overrides need language-narrowing of their own; see resolveSeo.
   merged.seo = resolveSeo(doc.seo, lang);
 
+  const lists = LIST_SPECS[docType] ?? {};
+
   for (const [key, value] of Object.entries(doc)) {
     if (key.startsWith('_')) continue;
     if (key === 'seo') continue; // handled above
-    if (key === 'faqs') continue; // handled after the loop, so it beats faqs_json
+    if (key in lists) continue; // handled after the loop, so lists beat their old _json box
 
     if (key.endsWith('_json')) {
       const name = key.slice(0, -'_json'.length);
@@ -229,11 +276,13 @@ export async function pageCopy<T extends object>(
     if (resolved !== undefined) merged[key] = resolved;
   }
 
-  // The FAQ list (one Sanity item per question) replaces the old single-box
-  // `faqs_json` field. When the list has entries for this language it wins;
-  // otherwise whatever faqs_json or the built-in copy provided stays.
-  const faqs = resolveQaList(doc.faqs, lang);
-  if (faqs) merged.faqs = faqs;
+  // Lists edited one row per item win over the old single-box `_json` version
+  // of the same list. An empty list leaves whatever that old box or the
+  // built-in copy provided.
+  for (const [name, spec] of Object.entries(lists)) {
+    const resolved = resolveList(doc[name], spec, lang);
+    if (resolved) merged[name] = resolved;
+  }
 
   return merged as T & PageExtras;
 }

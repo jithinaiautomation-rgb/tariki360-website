@@ -119,43 +119,66 @@ Each field has an **English** and an **العربية (Arabic)** box:
   ships with. It does **not** fall back to the other language, so an
   untranslated field never shows English text on the Arabic page.
 
-**Fields marked "(advanced)"** hold a list stored as raw JSON text — things
-like the five journey steps or the statistics. Edit the words inside the
+**Fields marked "(advanced)"** on the Services, Benefits, About and Contact
+pages still hold a list stored as raw JSON text. Edit the words inside the
 quotes and leave the brackets, quotes and commas exactly as they are. If the
-JSON ends up invalid the site ignores that one field and uses its built-in
-copy, so a slip can't break the page — but it also means your edit won't show
-up. There is one such field broken right now; see *Known issues* at the end.
+JSON ends up invalid, the site ignores that one field and uses its built-in
+copy, so a slip can't break the page, but your edit won't show up. The Home
+Page no longer has any of these; see below.
 
-### FAQs
+### The Home Page editor
 
-The home page FAQs are a list in **Home Page → FAQs**, one item per question.
-Click **Add item** to add a question and drag items to reorder. Each item has
-its own **Question** and **Answer**, each with English and Arabic boxes.
+The Home Page is laid out the same way as the page itself. There's one tab per
+section, numbered in the order they appear from top to bottom:
 
-A question appears on a language's page only when both its question and its
-answer are filled in for that language. If you add a question in English only,
-it shows on the English page and stays off the Arabic page until you add the
-Arabic. The Studio shows **EN · AR** under each item to tell you which
-languages are complete.
+| Tab | What's in it |
+| --- | ------------ |
+| 1. Top banner | Small label, the three-part headline, text, buttons, small features, floating badges |
+| 2. Numbers & quotes | The numbers bar and the scrolling quotes strip |
+| 3. The problem | Heading, paragraph and the two highlight boxes |
+| 4. Students, parents & schools | Section heading, then the three cards |
+| 5. Video section | Address bar text and the strip under the video |
+| 6. How it works | The steps, numbered automatically |
+| 7. The report | Left-hand list and the sample report card |
+| 8. School counselor suite | Left-hand boxes and the dashboard preview |
+| 9. Success stories | Headings for the testimonials section |
+| 10. FAQs | The questions |
+| 11. Bottom call to action | Heading, text and buttons |
+| SEO & schema | Search and sharing overrides and structured data |
 
-The same list drives the FAQPage structured data, so there's nothing else to
-update.
+Every field says what it is and where it appears. Some things are edited
+elsewhere, and the field description points there: the video in **Home Video
+Section**, and the testimonials in **Testimonials** and **Video Testimonials**.
 
-**One-time migration.** The FAQs used to live in a single JSON text box. The
-three existing questions are still in that old field. Until they're moved, the
-site keeps showing them, and the new list starts empty. To move them into the
-list, run this from `studio/`:
+**Lists are one row per item.** That covers the stats, features, journey
+steps, report rows, progress bars and FAQs. Click **Add item** to add a row
+and drag rows to reorder them. Each row shows **EN · AR** to say which
+languages are complete. A row appears on the English or Arabic page only when
+all of its text is filled in for that language, so a row translated into
+English but not yet Arabic stays off the Arabic page. Icons and percentages
+are shared by both languages.
+
+**The headline** is built from three parts: *Line 1*, then *Line 2 — plain
+start* followed by *Line 2 — highlighted part (red)*. The Arabic headline
+normally leaves the plain start empty.
+
+**One-time migration.** The lists used to be single JSON text boxes, and your
+current rows are still in those old boxes. Until they're moved, the site keeps
+showing them and the new lists start empty. The old boxes sit read-only under
+each list, labelled *Old format*. To move everything into the lists, run this
+from `studio/`:
 
 ```bash
 npx sanity login
-npx sanity exec scripts/migrate-faqs.js --with-user-token -- --dry-run
-npx sanity exec scripts/migrate-faqs.js --with-user-token
+npx sanity exec scripts/migrate-home-lists.js --with-user-token -- --dry-run
+npx sanity exec scripts/migrate-home-lists.js --with-user-token
 ```
 
-The first command logs you in. The `--dry-run` command only prints what it
-would change. The last one does the move and removes the old field. It's safe
-to run twice. You can also type the questions into the list by hand and skip
-the script: once the list has entries, the site ignores the old field.
+The first command logs you in. The `--dry-run` command prints what it would
+change, and the last one moves the rows and removes the old boxes. It's safe
+to run more than once, because a list that already has rows is skipped. You
+can also type rows in by hand instead; once a list has rows, the site ignores
+its old box.
 
 ### SEO on a page
 
@@ -404,19 +427,12 @@ versions are translations rather than duplicates.
 
 ## Known issues in the content
 
-**`topCareerList_json` on the Home Page document contains invalid JSON.**
-The Arabic entry is missing a closing quote:
-
-```
-["مصمم تجربة المستخدم / المنتجات,"98%"]
-                                 ↑ a " is missing here
-```
-
-The site detects this, logs a warning during the build, and falls back to its
-built-in list — so the "Top Career Matches" panel still renders correctly. But
-edits to that field are being ignored. To fix it, open the Home Page document
-in the Studio, find *Top career list (advanced)*, and add the missing quote so
-the entry reads `["مصمم تجربة المستخدم / المنتجات","98%"]`.
+**The "Top career matches" list has a broken old box.** In the old JSON text
+box, the Arabic entry is missing a closing quote, so that box can't be read.
+The site falls back to its built-in list, so the panel still looks right. The
+migration script skips this one list and says so. To fix it, open **Home Page
+→ 7. The report → Box 2 — careers with bars** and add the three careers as
+rows. Once the list has rows, the broken box is ignored.
 
 **One testimonial is a placeholder.** The only `testimonial` document reads
 "jithin / ceo / test test". Because real Sanity content replaces the built-in
