@@ -14,6 +14,7 @@ import { pageCopy } from '~/lib/pageCopy';
 import { COMMON } from '~/content/site';
 import { getSiteSettings } from '~/lib/settings';
 import { breadcrumbSchema } from '~/lib/seo';
+import { socialIcon } from '~/lib/social';
 
 interface Props {
   lang: Lang;
@@ -38,17 +39,6 @@ const schemas = [
   ]),
 ];
 
-const SOCIAL_ICONS: Record<string, string> = {
-  linkedin: 'work',
-  instagram: 'photo_camera',
-  facebook: 'groups',
-  x: 'chat',
-  twitter: 'chat',
-  youtube: 'smart_display',
-  tiktok: 'music_note',
-  whatsapp: 'chat_bubble',
-  website: 'public',
-};
 
 const socials = (settings.socialLinks ?? []).filter((s) => s.url);
 ---
@@ -171,7 +161,7 @@ const socials = (settings.socialLinks ?? []).filter((s) => s.url);
                         aria-label={s.platform ?? 'Social profile'}
                         style="width:40px;height:40px;border-radius:10px;border:1.5px solid var(--c-border);display:flex;align-items:center;justify-content:center">
                         <Icon
-                          name={SOCIAL_ICONS[(s.platform ?? '').toLowerCase()] ?? 'public'}
+                          name={socialIcon(s.platform)}
                           size={19}
                           color="var(--c-green)"
                         />

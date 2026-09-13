@@ -15,6 +15,7 @@ import logo from '~/assets/images/logo.png';
 import { localePath, type Lang } from '~/lib/i18n';
 import { getGlobalCopy } from '~/lib/globalCopy';
 import type { SocialLink } from '~/lib/seo';
+import { socialIcon } from '~/lib/social';
 
 interface Props {
   lang: Lang;
@@ -26,18 +27,6 @@ const { lang, socialLinks = [] } = Astro.props;
 // the link targets stay in code so an edit can't break routing.
 const t = (await getGlobalCopy(lang)).footer;
 
-/** Maps a platform name from Sanity onto a Material Symbols icon. */
-const SOCIAL_ICONS: Record<string, string> = {
-  linkedin: 'work',
-  instagram: 'photo_camera',
-  facebook: 'groups',
-  x: 'chat',
-  twitter: 'chat',
-  youtube: 'smart_display',
-  tiktok: 'music_note',
-  whatsapp: 'chat_bubble',
-  website: 'public',
-};
 ---
 
 <footer class="vfooter">
@@ -68,7 +57,7 @@ const SOCIAL_ICONS: Record<string, string> = {
                     rel="noopener noreferrer"
                     aria-label={s.platform ?? 'Social profile'}>
                     <Icon
-                      name={SOCIAL_ICONS[(s.platform ?? '').toLowerCase()] ?? 'public'}
+                      name={socialIcon(s.platform)}
                       size={19}
                     />
                   </a>

@@ -74,6 +74,25 @@ button {
   -webkit-font-smoothing: antialiased;
 }
 
+/* The `hidden` attribute must always hide. Without this, any class that sets
+   `display` (such as .vcard's flex) overrides it and the element stays visible. */
+[hidden] {
+  display: none !important;
+}
+
+/* Text read by screen readers but not shown, e.g. "(opens in a new tab)". */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Keyboard-only "skip to content" link. Invisible until focused.
    It is hidden ABOVE the page, not off to the side. The previous version sat
    at left:-9999px, which is harmless on English pages but on right-to-left
@@ -176,7 +195,12 @@ button {
 .vlang-toggle { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 13px; font-weight: 700; color: var(--c-green); background: var(--c-surf-2); border: 1.5px solid var(--c-border); cursor: pointer; padding: 7px 16px; border-radius: 999px; transition: background 0.18s, color 0.18s; text-decoration: none; display: inline-block; }
 .vlang-toggle:hover { background: var(--c-lime-dim); }
 .vlang-toggle-mobile { display: none; }
-@media (max-width: 900px) {
+/* Switch to the hamburger menu below 1220px, not at the 900px used elsewhere.
+   The full menu (logo, 8 links, language button, login) needs 1200px in both
+   English and Arabic; below that it pushed past the edge and made the whole
+   page scroll sideways. If menu labels are lengthened in Sanity, re-measure
+   and raise this number. */
+@media (max-width: 1219px) {
   .vnav-links { display: none; }
   .vnav-actions .vbtn { display: none; }
   .vnav-actions .vlang-toggle { display: none; }

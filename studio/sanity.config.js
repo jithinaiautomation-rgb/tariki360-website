@@ -87,6 +87,10 @@ export default defineConfig({
               .id('pageBlog')
               .child(S.document().schemaType('pageBlog').documentId('pageBlog')),
             S.listItem()
+              .title('Social Media Page')
+              .id('pageSocial')
+              .child(S.document().schemaType('pageSocial').documentId('pageSocial')),
+            S.listItem()
               .title('Resources Page')
               .id('pageResources')
               .child(S.document().schemaType('pageResources').documentId('pageResources')),
@@ -109,6 +113,8 @@ export default defineConfig({
             S.documentTypeListItem('blogPost').title('Blog Posts'),
             S.documentTypeListItem('author').title('Authors'),
             S.divider(),
+            S.documentTypeListItem('socialPost').title('Social Media Posts'),
+            S.divider(),
             S.documentTypeListItem('whitePaper').title('White Papers'),
             S.divider(),
             S.listItem()
@@ -130,7 +136,7 @@ export default defineConfig({
     templates: (prev) =>
       prev.filter(
         (t) =>
-          !['siteSettings', 'homeVideo', 'globalSettings', 'pageIndex', 'pageServices', 'pageBenefits', 'pageAbout', 'pageContact', 'pageBlog', 'pageResources'].includes(
+          !['siteSettings', 'homeVideo', 'globalSettings', 'pageIndex', 'pageServices', 'pageBenefits', 'pageAbout', 'pageContact', 'pageBlog', 'pageSocial', 'pageResources'].includes(
             t.schemaType,
           ),
       ),
@@ -139,7 +145,7 @@ export default defineConfig({
   document: {
     // Hide the duplicate / delete actions on the singleton documents.
     actions: (prev, { schemaType }) =>
-      ['siteSettings', 'homeVideo', 'globalSettings', 'pageIndex', 'pageServices', 'pageBenefits', 'pageAbout', 'pageContact', 'pageBlog', 'pageResources'].includes(
+      ['siteSettings', 'homeVideo', 'globalSettings', 'pageIndex', 'pageServices', 'pageBenefits', 'pageAbout', 'pageContact', 'pageBlog', 'pageSocial', 'pageResources'].includes(
         schemaType,
       )
         ? prev.filter(

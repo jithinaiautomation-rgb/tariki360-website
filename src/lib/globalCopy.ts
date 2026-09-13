@@ -15,13 +15,21 @@
  */
 import type { Lang } from './i18n';
 import { fetchSanity } from './sanity';
-import { NAV_ITEMS, NAV_LABELS, NAV_TEXT, FOOTER, MODAL, type NavKey } from '~/content/site';
+import { NAV_LABELS, NAV_TEXT, FOOTER, MODAL, type NavKey } from '~/content/site';
 
 type GlobalSettingsDoc = {
   navJson?: string;
   footerJson?: string;
   modalJson?: string;
 } | null;
+
+/**
+ * The menu order `navJson.labels` was written for. Labels are matched by
+ * position, so this order is frozen: adding a menu item (such as Social Media)
+ * must not shift which label lands on which link. New items take their label
+ * from their own page document, or from src/content/site.ts.
+ */
+const NAV_JSON_ORDER: NavKey[] = ['home', 'services', 'benefits', 'about', 'resources', 'blog', 'contact'];
 
 const QUERY = `*[_type == "globalSettings"][0]{ navJson, footerJson, modalJson }`;
 
@@ -73,6 +81,15 @@ export async function getGlobalCopy(lang: Lang): Promise<GlobalCopy> {
     modal: { ...MODAL[lang] },
   };
 
+  // The Social Media page's menu label is edited on that page's own document.
+  const socialNav = await fetchSanity<Record<string, unknown> | null>(
+    `*[_id == "pageSocial"][0].navLabel`,
+    {},
+    null,
+  );
+  const socialLabel = socialNav && typeof socialNav === 'object' ? str(socialNav[lang]) : null;
+  if (socialLabel) result.navLabels.social = socialLabel;
+
   if (!doc) {
     cache.set(lang, result);
     return result;
@@ -81,11 +98,11 @@ export async function getGlobalCopy(lang: Lang): Promise<GlobalCopy> {
   /* ---- nav ---- */
   const nav = parseBlob(doc.navJson, lang, 'navJson');
   if (nav) {
-    // `labels` is a positional array matching NAV_ITEMS order.
+    // `labels` is a positional array in NAV_JSON_ORDER.
     if (Array.isArray(nav.labels)) {
-      NAV_ITEMS.forEach((item, i) => {
+      NAV_JSON_ORDER.forEach((key, i) => {
         const label = str(nav.labels[i]);
-        if (label) result.navLabels[item.key] = label;
+        if (label) result.navLabels[key] = label;
       });
     }
     const login = str(nav.text?.login);

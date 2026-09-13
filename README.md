@@ -283,6 +283,37 @@ code, so renaming a footer link can't break routing.
 **Featured post:** ticking *Featured post* puts an article in the large slot at
 the top of the blog page. Tick it on only one post per language.
 
+### Social Media page
+
+The **Social Media** page (`/social-media/`, in the menu after Blog) shows your
+social posts as cards. Each card links to the original post, and new posts
+appear first.
+
+**Add a post:** Studio → **Social Media Posts** → **Create new**.
+
+- **Platform**: Instagram, YouTube, TikTok, LinkedIn, X or Facebook.
+- **Link to the post**: open the post in your browser and copy the address.
+  The Studio warns you if the link doesn't match the platform you picked.
+- **Picture for the card**: optional for YouTube, which uses the video's own
+  thumbnail automatically. For the other platforms, upload the post image or
+  a screenshot. Those platforms don't let websites fetch it, and without a
+  picture the card shows the platform icon instead.
+- **Short text on the card**: optional, in English and/or Arabic. A card with
+  no text in a language still shows on that page, just without text.
+- **Posted on**: sets the order.
+- **Show on**: both pages, English only, or Arabic only.
+
+Publish, then rebuild the site.
+
+**Why cards link out instead of embedding the post:** embeds from Instagram,
+TikTok and X load those companies' scripts and tracking cookies and make the
+page slower. A link card stays fast and always works.
+
+**Page wording** (heading, text, filter button, "View on …" link text, and the
+name in the top menu) is under **Social Media Page** in the sidebar. The
+"Follow us" strip at the bottom uses the social links in **Site Settings** and
+stays hidden until you add some.
+
 ### Add a white paper
 
 Same idea, under **White Papers**. The one thing to watch: each paper needs a

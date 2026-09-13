@@ -173,3 +173,17 @@ export const HOME_VIDEO_QUERY = `*[_type == "homeVideo"][0]{
   sectionHeading, badgeLabel, captionTitle, captionSubtitle, careerTags,
   videoUrl, "fileUrl": video.asset->url, "posterUrl": poster.asset->url
 }`;
+
+/* ----------------------------------------------------------- social media */
+
+/**
+ * Social media posts for one language page, newest first. `showOn` is
+ * "both", "en" or "ar"; posts saved before it existed count as "both".
+ */
+export const SOCIAL_POSTS_QUERY = `*[
+  _type == "socialPost"
+  && defined(url)
+  && (coalesce(showOn, "both") == "both" || showOn == $lang)
+] | order(coalesce(publishedAt, _createdAt) desc){
+  platform, url, caption, thumbnail, publishedAt
+}`;

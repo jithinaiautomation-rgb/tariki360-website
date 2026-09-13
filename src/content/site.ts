@@ -15,6 +15,7 @@ export const NAV_ITEMS = [
   { key: 'about', path: 'about' },
   { key: 'resources', path: 'white-papers' },
   { key: 'blog', path: 'blog' },
+  { key: 'social', path: 'social-media' },
   { key: 'contact', path: 'contact' },
 ] as const;
 
@@ -28,6 +29,7 @@ export const NAV_LABELS: Record<Lang, Record<NavKey, string>> = {
     about: 'About',
     resources: 'Resources',
     blog: 'Blog',
+    social: 'Social Media',
     contact: 'Contact',
   },
   ar: {
@@ -37,6 +39,7 @@ export const NAV_LABELS: Record<Lang, Record<NavKey, string>> = {
     about: 'من نحن',
     resources: 'الموارد',
     blog: 'المدونة',
+    social: 'التواصل الاجتماعي',
     contact: 'تواصل معنا',
   },
 };

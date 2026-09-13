@@ -80,7 +80,12 @@ const { allLabel, categories, target } = Astro.props;
       });
 
       grid.querySelectorAll<HTMLElement>('[data-category]').forEach((card) => {
-        card.hidden = wanted !== '*' && card.dataset.category !== wanted;
+        // Hide the grid cell that holds the card. Cards are usually wrapped
+        // (e.g. in <Reveal>), and hiding only the card would leave an empty
+        // cell in the grid.
+        let cell: HTMLElement = card;
+        while (cell.parentElement && cell.parentElement !== grid) cell = cell.parentElement;
+        cell.hidden = wanted !== '*' && card.dataset.category !== wanted;
       });
     });
   });

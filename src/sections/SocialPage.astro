@@ -1,0 +1,249 @@
+---
+/**
+ * The Social Media page — /social-media/ and /ar/social-media/.
+ *
+ * Posts are "Social Media Post" documents in Sanity, fetched at build time and
+ * rendered as link cards. Nothing is fetched in the visitor's browser, and no
+ * third-party embed scripts are loaded: each card links to the original post.
+ */
+import Base from '~/layouts/Base.astro';
+import Icon from '~/components/Icon.astro';
+import Tag from '~/components/Tag.astro';
+import Reveal from '~/components/Reveal.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import CategoryFilter from '~/components/CategoryFilter.astro';
+import SanityImage from '~/components/SanityImage.astro';
+
+import { localePath, absoluteUrl, type Lang } from '~/lib/i18n';
+import { SOCIAL } from '~/content/social';
+import { COMMON } from '~/content/site';
+import { pageCopy } from '~/lib/pageCopy';
+import { fetchSanity, type SanityImageSource } from '~/lib/sanity';
+import { SOCIAL_POSTS_QUERY } from '~/lib/queries';
+import { formatFullDate, isoDate } from '~/lib/format';
+import { breadcrumbSchema } from '~/lib/seo';
+import { getSiteSettings } from '~/lib/settings';
+import { isWebUrl, platformLabel, socialIcon, youtubeId, youtubeThumbnail } from '~/lib/social';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+// Page wording comes from the 'pageSocial' document in Sanity, laid over the
+// built-in copy in src/content/social.ts. See src/lib/pageCopy.ts.
+const t = await pageCopy('pageSocial', lang, SOCIAL[lang]);
+const common = COMMON[lang];
+const settings = await getSiteSettings();
+
+/* ---- Posts --------------------------------------------------------------- */
+
+type RawPost = {
+  platform?: string;
+  url?: string;
+  caption?: Record<string, unknown> | null;
+  thumbnail?: (NonNullable<SanityImageSource> & { alt?: string }) | null;
+  publishedAt?: string;
+};
+
+const raw = await fetchSanity<RawPost[]>(SOCIAL_POSTS_QUERY, { lang }, []);
+
+const posts = raw
+  // Only render real web links: a "javascript:" or malformed URL never
+  // reaches an href.
+  .filter((p) => p?.platform && isWebUrl(p.url))
+  .map((p) => {
+    const captionRaw = p.caption?.[lang];
+    const yt = p.platform === 'youtube' ? youtubeId(p.url) : null;
+    return {
+      url: p.url as string,
+      platform: p.platform as string,
+      label: platformLabel(p.platform, lang),
+      icon: socialIcon(p.platform),
+      caption: typeof captionRaw === 'string' ? captionRaw.trim() : '',
+      thumbnail: p.thumbnail?.asset ? p.thumbnail : null,
+      ytThumb: yt ? youtubeThumbnail(yt) : null,
+      isVideo: p.platform === 'youtube' || p.platform === 'tiktok',
+      date: formatFullDate(p.publishedAt, lang),
+      datetime: isoDate(p.publishedAt),
+    };
+  });
+
+const viewOn = (label: string) => t.viewOn.replace('{platform}', label);
+const categories = [...new Set(posts.map((p) => p.label))];
+
+const socials = (settings.socialLinks ?? []).filter((s) => isWebUrl(s.url));
+
+/* ---- SEO ----------------------------------------------------------------- */
+
+const schemas = [
+  breadcrumbSchema([
+    { name: common.breadcrumbHome, url: absoluteUrl(localePath(lang), Astro.site) },
+    { name: t.heroTag, url: absoluteUrl(localePath(lang, 'social-media'), Astro.site) },
+  ]),
+];
+
+const crumbs = [
+  { name: common.breadcrumbHome, href: localePath(lang) },
+  { name: t.heroTag },
+];
+---
+
+<Base
+  lang={lang}
+  path="social-media"
+  title={t.metaTitle}
+  description={t.metaDescription}
+  seoTitle={t.seo?.title}
+  seoDescription={t.seo?.description}
+  seoImage={t.seo?.image}
+  structuredData={t.structuredData}
+  schemas={schemas}>
+  {/* ---- Hero ---- */}
+  <section class="vsec" style="background:#F5EDD8;padding:52px 0;position:relative;overflow:hidden">
+    <div
+      style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(133,19,29,0.10) 1.5px,transparent 1.5px),radial-gradient(circle,rgba(133,19,29,0.06) 1px,transparent 1px);background-size:36px 36px,18px 18px;background-position:0 0,9px 9px">
+    </div>
+    <div
+      style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,rgba(12,77,28,0.18),rgba(133,19,29,0.15),transparent);pointer-events:none">
+    </div>
+
+    <div class="vc" style="max-width:720px;position:relative;z-index:1">
+      <Breadcrumbs items={crumbs} style="margin-bottom:18px" />
+      <Tag color="green">{t.heroTag}</Tag>
+      <h1
+        class="vh2"
+        style="color:var(--c-dark);margin-top:18px;margin-bottom:14px;font-size:clamp(28px,7vw,52px)">
+        {t.heroTitle}
+      </h1>
+      <p style="color:var(--c-muted);font-size:18px;line-height:1.65">{t.heroSubtitle}</p>
+    </div>
+  </section>
+
+  {/* ---- Posts ---- */}
+  <section class="vsec vsec-light">
+    <div class="vc">
+      <div
+        class="vwhitepapers-head"
+        style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;gap:16px">
+        <div>
+          <h2 class="vh2" style="margin-bottom:6px">{t.latestTitle}</h2>
+          <p style="color:var(--c-muted);font-size:16px">{t.latestSubtitle}</p>
+        </div>
+        {
+          categories.length > 1 && (
+            <CategoryFilter allLabel={t.allPlatforms} categories={categories} target="#social-grid" />
+          )
+        }
+      </div>
+
+      {
+        posts.length > 0 ? (
+          <div class="g3" id="social-grid">
+            {posts.map((p, i) => (
+              <Reveal delay={Math.min(i, 8) * 70}>
+                <a
+                  href={p.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-category={p.label}
+                  class="vcard vcard-hover vcard-link"
+                  style="padding:0;overflow:hidden;border-radius:16px;display:flex;flex-direction:column;height:100%">
+                  <div style="aspect-ratio:4/3;background:linear-gradient(135deg,var(--c-dark) 0%,rgba(52,92,51,.85) 100%);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">
+                    {p.thumbnail ? (
+                      <SanityImage
+                        image={p.thumbnail}
+                        alt={p.thumbnail.alt ?? ''}
+                        width={480}
+                        height={360}
+                        sizes="(max-width: 900px) 100vw, 380px"
+                        style="width:100%;height:100%;object-fit:cover;display:block"
+                      />
+                    ) : p.ytThumb ? (
+                      <img
+                        src={p.ytThumb}
+                        alt=""
+                        width="480"
+                        height="360"
+                        loading="lazy"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                        style="width:100%;height:100%;object-fit:cover;display:block"
+                      />
+                    ) : (
+                      <Icon name={p.icon} size={64} color="rgba(255,255,255,0.55)" />
+                    )}
+
+                    {p.isVideo && (p.thumbnail || p.ytThumb) && (
+                      <span
+                        class="vplaymini"
+                        style="position:absolute;width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,0.45);border:2px solid rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center">
+                        <Icon name="play_arrow" size={30} color="#fff" />
+                      </span>
+                    )}
+
+                    <span style="position:absolute;top:12px;inset-inline-start:12px">
+                      <Tag color="dark" icon={p.icon} style="background:rgba(255,255,255,0.92)">
+                        {p.label}
+                      </Tag>
+                    </span>
+                  </div>
+
+                  <div style="padding:20px 22px;display:flex;flex-direction:column;flex:1;gap:14px">
+                    {p.caption && (
+                      <p style="margin:0;color:var(--c-dark);font-size:15px;line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">
+                        {p.caption}
+                      </p>
+                    )}
+                    <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:10px">
+                      {p.date ? (
+                        <time
+                          datetime={p.datetime}
+                          style="font-size:12px;color:var(--c-muted);display:flex;align-items:center;gap:5px">
+                          <Icon name="calendar_today" size={14} />
+                          {p.date}
+                        </time>
+                      ) : (
+                        <span />
+                      )}
+                      <span style="color:var(--c-green);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px">
+                        {viewOn(p.label)}
+                        <Icon name="open_in_new" size={15} />
+                        <span class="sr-only">{t.opensInNewTab}</span>
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <p class="vempty">{t.emptyState}</p>
+        )
+      }
+    </div>
+  </section>
+
+  {/* ---- Follow us ---- */}
+  {
+    socials.length > 0 && (
+      <section style="background:var(--c-dark);padding:56px 0">
+        <div class="vc" style="text-align:center;max-width:720px">
+          <h2 class="vh2" style="color:#fff;margin:0 0 10px;font-size:clamp(24px,4vw,34px)">
+            {t.followTitle}
+          </h2>
+          <p style="color:rgba(255,255,255,0.6);margin:0 0 26px;font-size:16px">{t.followSubtitle}</p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            {socials.map((s) => (
+              <a href={s.url} target="_blank" rel="noopener noreferrer" class="vbtn vbtn-md vbtn-ghost">
+                <Icon name={socialIcon(s.platform)} size={18} />
+                {platformLabel(s.platform, lang)}
+                <span class="sr-only">{t.opensInNewTab}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+</Base>

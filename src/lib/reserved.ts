@@ -14,6 +14,7 @@ export const RESERVED_SLUGS = new Set([
   'about',
   'contact',
   'blog',
+  'social-media',
   'white-papers',
   'og',
   'robots.txt',
