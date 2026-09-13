@@ -26,7 +26,7 @@ export const NAV_LABELS: Record<Lang, Record<NavKey, string>> = {
     home: 'Home',
     services: 'Services',
     benefits: 'Benefits',
-    about: 'About',
+    about: 'About Us',
     resources: 'Resources',
     blog: 'Blog',
     social: 'Media',

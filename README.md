@@ -154,7 +154,8 @@ A few page-specific notes:
 - **Services:** the words shared by both price cards ("one-time" and the two
   button labels) are edited once, under *Used on both cards*. The tick lists
   add their tick icons automatically.
-- **About:** the *Intro paragraph* is the paragraph under the heading. The two
+- **About:** the *Menu* tab sets the name in the top menu (for example "About Us").
+  The *Intro paragraph* is the paragraph under the heading. The two
   *names shown in bold* are bolded wherever they appear in it, so spell them
   exactly as they are written in the paragraph.
 - **Contact:** each form field has its label and its grey example text grouped

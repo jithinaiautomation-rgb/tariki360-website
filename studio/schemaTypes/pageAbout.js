@@ -16,6 +16,7 @@ export default defineType({
     { name: 'initiative', title: '2. What is Tariki 360' },
     { name: 'partners', title: '3. Partners' },
     { name: 'board', title: '4. Board of directors' },
+    { name: 'menu', title: 'Menu' },
     { name: 'seo', title: 'SEO & schema' },
   ],
 
@@ -101,6 +102,14 @@ export default defineType({
     oldFormat('board_json', 'board'),
 
     /* ------------------------------------------------------ SEO & schema */
+    /* --------------------------------------------------------------- Menu */
+    text(
+      'navLabel',
+      'Name in the top menu',
+      'e.g. "About Us". This wins over the label in Navigation, Footer & Sign-up. Leave empty to use that label instead.',
+      'menu',
+    ),
+
     ...seoFields(),
   ],
 

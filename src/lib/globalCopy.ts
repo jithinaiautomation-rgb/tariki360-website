@@ -25,13 +25,27 @@ type GlobalSettingsDoc = {
 
 /**
  * The menu order `navJson.labels` was written for. Labels are matched by
- * position, so this order is frozen: adding a menu item (such as Social Media)
- * must not shift which label lands on which link. New items take their label
- * from their own page document, or from src/content/site.ts.
+ * position, so this order is frozen: adding a menu item (such as Media) must
+ * not shift which label lands on which link.
  */
 const NAV_JSON_ORDER: NavKey[] = ['home', 'services', 'benefits', 'about', 'resources', 'blog', 'contact'];
 
+/**
+ * Menu items whose label can also be set on their own page document, in a
+ * "Name in the top menu" field. That field wins over `navJson`: it is the
+ * easy, clearly-labelled place to rename a menu item, while `navJson` is a
+ * raw JSON text box.
+ */
+const PAGE_NAV_LABELS: Array<[NavKey, string]> = [
+  ['about', 'pageAbout'],
+  ['social', 'pageSocial'],
+];
+
 const QUERY = `*[_type == "globalSettings"][0]{ navJson, footerJson, modalJson }`;
+
+const PAGE_NAV_QUERY = `{ ${PAGE_NAV_LABELS.map(
+  ([key, id]) => `"${key}": *[_id == "${id}"][0].navLabel`,
+).join(', ')} }`;
 
 /** Parse one of the JSON string fields, returning null if it's unusable. */
 function parseBlob(raw: unknown, lang: Lang, label: string): Record<string, any> | null {
@@ -70,6 +84,7 @@ export async function getGlobalCopy(lang: Lang): Promise<GlobalCopy> {
   if (hit) return hit;
 
   const doc = await fetchSanity<GlobalSettingsDoc>(QUERY, {}, null);
+  const pageNav = await fetchSanity<Record<string, unknown> | null>(PAGE_NAV_QUERY, {}, null);
 
   const result: GlobalCopy = {
     navLabels: { ...NAV_LABELS[lang] },
@@ -81,19 +96,19 @@ export async function getGlobalCopy(lang: Lang): Promise<GlobalCopy> {
     modal: { ...MODAL[lang] },
   };
 
-  // The Social Media page's menu label is edited on that page's own document.
-  const socialNav = await fetchSanity<Record<string, unknown> | null>(
-    `*[_id == "pageSocial"][0].navLabel`,
-    {},
-    null,
-  );
-  const socialLabel = socialNav && typeof socialNav === 'object' ? str(socialNav[lang]) : null;
-  if (socialLabel) result.navLabels.social = socialLabel;
-
-  if (!doc) {
+  /** Apply "Name in the top menu" from page documents; runs last so it wins. */
+  const finish = () => {
+    for (const [key] of PAGE_NAV_LABELS) {
+      const value = pageNav?.[key];
+      const label =
+        value && typeof value === 'object' ? str((value as Record<string, unknown>)[lang]) : null;
+      if (label) result.navLabels[key] = label;
+    }
     cache.set(lang, result);
     return result;
-  }
+  };
+
+  if (!doc) return finish();
 
   /* ---- nav ---- */
   const nav = parseBlob(doc.navJson, lang, 'navJson');
@@ -157,6 +172,5 @@ export async function getGlobalCopy(lang: Lang): Promise<GlobalCopy> {
     // could not be stored there anyway. Both keep their code values.
   }
 
-  cache.set(lang, result);
-  return result;
+  return finish();
 }
