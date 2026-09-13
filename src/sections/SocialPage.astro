@@ -2,9 +2,10 @@
 /**
  * The Social Media page — /social-media/ and /ar/social-media/.
  *
- * Posts are "Social Media Post" documents in Sanity, fetched at build time and
- * rendered as link cards. Nothing is fetched in the visitor's browser, and no
- * third-party embed scripts are loaded: each card links to the original post.
+ * Cards come from the "Social media links" list on the Social Media Page
+ * document in Sanity: each row is a Title and a URL. The platform is detected
+ * from the URL. Everything is resolved at build time; no third-party embed
+ * scripts are loaded, and each card links to the original post.
  */
 import Base from '~/layouts/Base.astro';
 import Icon from '~/components/Icon.astro';
@@ -12,65 +13,54 @@ import Tag from '~/components/Tag.astro';
 import Reveal from '~/components/Reveal.astro';
 import Breadcrumbs from '~/components/Breadcrumbs.astro';
 import CategoryFilter from '~/components/CategoryFilter.astro';
-import SanityImage from '~/components/SanityImage.astro';
 
 import { localePath, absoluteUrl, type Lang } from '~/lib/i18n';
 import { SOCIAL } from '~/content/social';
 import { COMMON } from '~/content/site';
 import { pageCopy } from '~/lib/pageCopy';
-import { fetchSanity, type SanityImageSource } from '~/lib/sanity';
-import { SOCIAL_POSTS_QUERY } from '~/lib/queries';
-import { formatFullDate, isoDate } from '~/lib/format';
 import { breadcrumbSchema } from '~/lib/seo';
 import { getSiteSettings } from '~/lib/settings';
-import { isWebUrl, platformLabel, socialIcon, youtubeId, youtubeThumbnail } from '~/lib/social';
+import {
+  detectPlatform,
+  isWebUrl,
+  platformLabel,
+  socialIcon,
+  youtubeId,
+  youtubeThumbnail,
+} from '~/lib/social';
 
 interface Props {
   lang: Lang;
 }
 
 const { lang } = Astro.props;
-// Page wording comes from the 'pageSocial' document in Sanity, laid over the
-// built-in copy in src/content/social.ts. See src/lib/pageCopy.ts.
+// Page wording and the links come from the 'pageSocial' document in Sanity,
+// laid over the built-in copy in src/content/social.ts. See src/lib/pageCopy.ts.
 const t = await pageCopy('pageSocial', lang, SOCIAL[lang]);
 const common = COMMON[lang];
 const settings = await getSiteSettings();
 
-/* ---- Posts --------------------------------------------------------------- */
+/* ---- Cards --------------------------------------------------------------- */
 
-type RawPost = {
-  platform?: string;
-  url?: string;
-  caption?: Record<string, unknown> | null;
-  thumbnail?: (NonNullable<SanityImageSource> & { alt?: string }) | null;
-  publishedAt?: string;
-};
-
-const raw = await fetchSanity<RawPost[]>(SOCIAL_POSTS_QUERY, { lang }, []);
-
-const posts = raw
-  // Only render real web links: a "javascript:" or malformed URL never
+const cards = (t.links as Array<[string, string]>)
+  // Only real web links become cards: a "javascript:" or malformed URL never
   // reaches an href.
-  .filter((p) => p?.platform && isWebUrl(p.url))
-  .map((p) => {
-    const captionRaw = p.caption?.[lang];
-    const yt = p.platform === 'youtube' ? youtubeId(p.url) : null;
+  .filter(([title, url]) => Boolean(title) && isWebUrl(url))
+  .map(([title, url]) => {
+    const platform = detectPlatform(url);
+    const yt = platform === 'youtube' ? youtubeId(url) : null;
+    const name = platform ? platformLabel(platform, lang) : null;
     return {
-      url: p.url as string,
-      platform: p.platform as string,
-      label: platformLabel(p.platform, lang),
-      icon: socialIcon(p.platform),
-      caption: typeof captionRaw === 'string' ? captionRaw.trim() : '',
-      thumbnail: p.thumbnail?.asset ? p.thumbnail : null,
+      title,
+      url,
+      label: name ?? t.otherWebsite,
+      icon: socialIcon(platform ?? 'website'),
       ytThumb: yt ? youtubeThumbnail(yt) : null,
-      isVideo: p.platform === 'youtube' || p.platform === 'tiktok',
-      date: formatFullDate(p.publishedAt, lang),
-      datetime: isoDate(p.publishedAt),
+      linkText: name ? t.viewOn.replace('{platform}', name) : t.openLink,
     };
   });
 
-const viewOn = (label: string) => t.viewOn.replace('{platform}', label);
-const categories = [...new Set(posts.map((p) => p.label))];
+const categories = [...new Set(cards.map((c) => c.label))];
 
 const socials = (settings.socialLinks ?? []).filter((s) => isWebUrl(s.url));
 
@@ -120,7 +110,7 @@ const crumbs = [
     </div>
   </section>
 
-  {/* ---- Posts ---- */}
+  {/* ---- Link cards ---- */}
   <section class="vsec vsec-light">
     <div class="vc">
       <div
@@ -138,80 +128,56 @@ const crumbs = [
       </div>
 
       {
-        posts.length > 0 ? (
+        cards.length > 0 ? (
           <div class="g3" id="social-grid">
-            {posts.map((p, i) => (
+            {cards.map((c, i) => (
               <Reveal delay={Math.min(i, 8) * 70}>
                 <a
-                  href={p.url}
+                  href={c.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  data-category={p.label}
+                  data-category={c.label}
                   class="vcard vcard-hover vcard-link"
                   style="padding:0;overflow:hidden;border-radius:16px;display:flex;flex-direction:column;height:100%">
-                  <div style="aspect-ratio:4/3;background:linear-gradient(135deg,var(--c-dark) 0%,rgba(52,92,51,.85) 100%);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">
-                    {p.thumbnail ? (
-                      <SanityImage
-                        image={p.thumbnail}
-                        alt={p.thumbnail.alt ?? ''}
-                        width={480}
-                        height={360}
-                        sizes="(max-width: 900px) 100vw, 380px"
-                        style="width:100%;height:100%;object-fit:cover;display:block"
-                      />
-                    ) : p.ytThumb ? (
-                      <img
-                        src={p.ytThumb}
-                        alt=""
-                        width="480"
-                        height="360"
-                        loading="lazy"
-                        decoding="async"
-                        referrerpolicy="no-referrer"
-                        style="width:100%;height:100%;object-fit:cover;display:block"
-                      />
+                  <div style="aspect-ratio:16/9;background:linear-gradient(135deg,var(--c-dark) 0%,rgba(52,92,51,.85) 100%);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">
+                    {c.ytThumb ? (
+                      <>
+                        <img
+                          src={c.ytThumb}
+                          alt=""
+                          width="480"
+                          height="360"
+                          loading="lazy"
+                          decoding="async"
+                          referrerpolicy="no-referrer"
+                          style="width:100%;height:100%;object-fit:cover;display:block"
+                        />
+                        <span
+                          class="vplaymini"
+                          style="position:absolute;width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,0.45);border:2px solid rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center">
+                          <Icon name="play_arrow" size={30} color="#fff" />
+                        </span>
+                      </>
                     ) : (
-                      <Icon name={p.icon} size={64} color="rgba(255,255,255,0.55)" />
-                    )}
-
-                    {p.isVideo && (p.thumbnail || p.ytThumb) && (
-                      <span
-                        class="vplaymini"
-                        style="position:absolute;width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,0.45);border:2px solid rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center">
-                        <Icon name="play_arrow" size={30} color="#fff" />
-                      </span>
+                      <Icon name={c.icon} size={56} color="rgba(255,255,255,0.55)" />
                     )}
 
                     <span style="position:absolute;top:12px;inset-inline-start:12px">
-                      <Tag color="dark" icon={p.icon} style="background:rgba(255,255,255,0.92)">
-                        {p.label}
+                      <Tag color="dark" icon={c.icon} style="background:rgba(255,255,255,0.92)">
+                        {c.label}
                       </Tag>
                     </span>
                   </div>
 
-                  <div style="padding:20px 22px;display:flex;flex-direction:column;flex:1;gap:14px">
-                    {p.caption && (
-                      <p style="margin:0;color:var(--c-dark);font-size:15px;line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">
-                        {p.caption}
-                      </p>
-                    )}
-                    <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:10px">
-                      {p.date ? (
-                        <time
-                          datetime={p.datetime}
-                          style="font-size:12px;color:var(--c-muted);display:flex;align-items:center;gap:5px">
-                          <Icon name="calendar_today" size={14} />
-                          {p.date}
-                        </time>
-                      ) : (
-                        <span />
-                      )}
-                      <span style="color:var(--c-green);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px">
-                        {viewOn(p.label)}
-                        <Icon name="open_in_new" size={15} />
-                        <span class="sr-only">{t.opensInNewTab}</span>
-                      </span>
-                    </div>
+                  <div style="padding:20px 22px;display:flex;flex-direction:column;flex:1;gap:16px">
+                    <h3 style="margin:0;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:17px;line-height:1.4;color:var(--c-dark);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">
+                      {c.title}
+                    </h3>
+                    <span style="margin-top:auto;color:var(--c-green);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px">
+                      {c.linkText}
+                      <Icon name="open_in_new" size={15} />
+                      <span class="sr-only">{t.opensInNewTab}</span>
+                    </span>
                   </div>
                 </a>
               </Reveal>

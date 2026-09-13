@@ -286,33 +286,35 @@ the top of the blog page. Tick it on only one post per language.
 ### Social Media page
 
 The **Social Media** page (`/social-media/`, in the menu after Blog) shows your
-social posts as cards. Each card links to the original post, and new posts
-appear first.
+social media links as cards.
 
-**Add a post:** Studio → **Social Media Posts** → **Create new**.
+**Add a link:** Studio → **Social Media Page** → **2. Social media links** →
+**Add item**, then fill in:
 
-- **Platform**: Instagram, YouTube, TikTok, LinkedIn, X or Facebook.
-- **Link to the post**: open the post in your browser and copy the address.
-  The Studio warns you if the link doesn't match the platform you picked.
-- **Picture for the card**: optional for YouTube, which uses the video's own
-  thumbnail automatically. For the other platforms, upload the post image or
-  a screenshot. Those platforms don't let websites fetch it, and without a
-  picture the card shows the platform icon instead.
-- **Short text on the card**: optional, in English and/or Arabic. A card with
-  no text in a language still shows on that page, just without text.
-- **Posted on**: sets the order.
-- **Show on**: both pages, English only, or Arabic only.
+- **Title**: the text on the card, with English and Arabic boxes.
+- **Social media URL**: open the post, video or profile in your browser and
+  copy the address.
 
+Each row becomes one card, in the order of the list; drag rows to reorder.
 Publish, then rebuild the site.
+
+What happens automatically:
+
+- **The platform is detected from the URL** (YouTube, Instagram, TikTok,
+  LinkedIn, X or Facebook). The card shows its name and icon, and visitors can
+  filter by platform. Any other website shows as "Website".
+- **YouTube links show the video's thumbnail.** Other platforms don't let
+  websites fetch post images, so their cards show the platform icon.
+- **Languages:** a card shows on the English or Arabic page when its title is
+  filled in for that language. The URL is shared by both.
 
 **Why cards link out instead of embedding the post:** embeds from Instagram,
 TikTok and X load those companies' scripts and tracking cookies and make the
 page slower. A link card stays fast and always works.
 
-**Page wording** (heading, text, filter button, "View on …" link text, and the
-name in the top menu) is under **Social Media Page** in the sidebar. The
-"Follow us" strip at the bottom uses the social links in **Site Settings** and
-stays hidden until you add some.
+The same document holds the rest of the page wording, the name in the top
+menu, and SEO. The "Follow us" strip at the bottom uses the social links in
+**Site Settings** and stays hidden until you add some.
 
 ### Add a white paper
 

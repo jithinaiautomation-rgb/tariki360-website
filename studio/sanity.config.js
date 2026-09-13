@@ -113,8 +113,6 @@ export default defineConfig({
             S.documentTypeListItem('blogPost').title('Blog Posts'),
             S.documentTypeListItem('author').title('Authors'),
             S.divider(),
-            S.documentTypeListItem('socialPost').title('Social Media Posts'),
-            S.divider(),
             S.documentTypeListItem('whitePaper').title('White Papers'),
             S.divider(),
             S.listItem()

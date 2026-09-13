@@ -1,13 +1,13 @@
 /**
  * Social Media page copy.
  *
- * The posts themselves come from Sanity ("Social Media Posts"); this holds the
- * surrounding page wording. Every value here can be overridden in Sanity on
- * the "Social Media Page" document.
+ * The links shown as cards come from the "Social media links" list on the
+ * Social Media Page document in Sanity; every other value here can be
+ * overridden on that document too.
  *
- * There are no placeholder posts: an invented social post would be
+ * `links` is empty on purpose: an invented social post would be
  * indistinguishable from a real one, so an empty page shows an honest
- * "no posts yet" message instead.
+ * "no links yet" message instead.
  */
 import type { Lang } from '~/lib/i18n';
 
@@ -22,13 +22,18 @@ export const SOCIAL = {
     heroSubtitle:
       'Videos, student stories and practical career guidance from the Tariki 360 team, gathered from our channels in one place.',
 
+    /** [title, url] per card. Filled from Sanity. */
+    links: [] as Array<[string, string]>,
+
     latestTitle: 'Latest Posts',
     latestSubtitle: 'Fresh from our channels.',
     allPlatforms: 'All platforms',
     /** `{platform}` is replaced with the platform name, e.g. "View on YouTube". */
     viewOn: 'View on {platform}',
+    openLink: 'Open link',
+    otherWebsite: 'Website',
     opensInNewTab: '(opens in a new tab)',
-    emptyState: 'No posts yet. Follow us on our channels in the meantime.',
+    emptyState: 'No links yet. Follow us on our channels in the meantime.',
 
     followTitle: 'Follow Tariki 360',
     followSubtitle: 'Get new videos and career tips as soon as they are posted.',
@@ -44,12 +49,16 @@ export const SOCIAL = {
     heroSubtitle:
       'فيديوهات وقصص طلاب ونصائح عملية للتوجيه المهني من فريق طريقي 360، مجمّعة من قنواتنا في مكان واحد.',
 
+    links: [] as Array<[string, string]>,
+
     latestTitle: 'أحدث المنشورات',
     latestSubtitle: 'جديد قنواتنا.',
     allPlatforms: 'كل المنصات',
     viewOn: 'مشاهدة على {platform}',
+    openLink: 'فتح الرابط',
+    otherWebsite: 'موقع إلكتروني',
     opensInNewTab: '(يفتح في علامة تبويب جديدة)',
-    emptyState: 'لا توجد منشورات بعد. تابعنا على قنواتنا في هذه الأثناء.',
+    emptyState: 'لا توجد روابط بعد. تابعنا على قنواتنا في هذه الأثناء.',
 
     followTitle: 'تابع طريقي 360',
     followSubtitle: 'احصل على الفيديوهات ونصائح المسار المهني فور نشرها.',

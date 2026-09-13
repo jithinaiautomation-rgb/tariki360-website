@@ -184,6 +184,11 @@ const LIST_SPECS: Record<string, Record<string, ListSpec>> = {
     info: { parts: [plain('icon'), loc('title'), loc('description'), plainOptional('action')] },
     langs: { parts: [plain('code'), loc('label')] },
   },
+  pageSocial: {
+    // One card per row. The URL is shared by both languages; the card shows
+    // on a language's page when its title exists in that language.
+    links: { parts: [loc('title'), plain('url')] },
+  },
 };
 
 /**

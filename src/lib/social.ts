@@ -57,6 +57,29 @@ export function isWebUrl(url: unknown): url is string {
   }
 }
 
+/** Domains belonging to each platform. Subdomains (www., m. …) also match. */
+const PLATFORM_DOMAINS: Record<string, string[]> = {
+  youtube: ['youtube.com', 'youtu.be', 'youtube-nocookie.com'],
+  instagram: ['instagram.com', 'instagr.am'],
+  tiktok: ['tiktok.com'],
+  linkedin: ['linkedin.com', 'lnkd.in'],
+  x: ['x.com', 'twitter.com'],
+  facebook: ['facebook.com', 'fb.com', 'fb.watch'],
+};
+
+/**
+ * Which platform a link belongs to, worked out from its domain — for example
+ * "youtube" for https://youtu.be/… Returns null for any other website.
+ */
+export function detectPlatform(url: string | null | undefined): string | null {
+  if (!isWebUrl(url)) return null;
+  const host = new URL(url).hostname.toLowerCase();
+  for (const [platform, domains] of Object.entries(PLATFORM_DOMAINS)) {
+    if (domains.some((d) => host === d || host.endsWith('.' + d))) return platform;
+  }
+  return null;
+}
+
 const YT_ID = /^[A-Za-z0-9_-]{11}$/;
 
 /**

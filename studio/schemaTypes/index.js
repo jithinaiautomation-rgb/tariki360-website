@@ -13,7 +13,6 @@ import pageContact from './pageContact';
 import pageBlog from './pageBlog';
 import pageResources from './pageResources';
 import pageSocial from './pageSocial';
-import socialPost from './socialPost';
 
 import siteSettings from './siteSettings';
 import landingPage from './landingPage';
@@ -48,7 +47,6 @@ export const schemaTypes = [
   siteSettings,
   landingPage,
   blogPost,
-  socialPost,
   author,
   whitePaper,
   testimonial,
