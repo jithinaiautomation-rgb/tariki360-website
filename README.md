@@ -120,11 +120,42 @@ Each field has an **English** and an **العربية (Arabic)** box:
   untranslated field never shows English text on the Arabic page.
 
 **Fields marked "(advanced)"** hold a list stored as raw JSON text — things
-like the five journey steps or the FAQ questions. Edit the words inside the
+like the five journey steps or the statistics. Edit the words inside the
 quotes and leave the brackets, quotes and commas exactly as they are. If the
 JSON ends up invalid the site ignores that one field and uses its built-in
 copy, so a slip can't break the page — but it also means your edit won't show
 up. There is one such field broken right now; see *Known issues* at the end.
+
+### FAQs
+
+The home page FAQs are a list in **Home Page → FAQs**, one item per question.
+Click **Add item** to add a question and drag items to reorder. Each item has
+its own **Question** and **Answer**, each with English and Arabic boxes.
+
+A question appears on a language's page only when both its question and its
+answer are filled in for that language. If you add a question in English only,
+it shows on the English page and stays off the Arabic page until you add the
+Arabic. The Studio shows **EN · AR** under each item to tell you which
+languages are complete.
+
+The same list drives the FAQPage structured data, so there's nothing else to
+update.
+
+**One-time migration.** The FAQs used to live in a single JSON text box. The
+three existing questions are still in that old field. Until they're moved, the
+site keeps showing them, and the new list starts empty. To move them into the
+list, run this from `studio/`:
+
+```bash
+npx sanity login
+npx sanity exec scripts/migrate-faqs.js --with-user-token -- --dry-run
+npx sanity exec scripts/migrate-faqs.js --with-user-token
+```
+
+The first command logs you in. The `--dry-run` command only prints what it
+would change. The last one does the move and removes the old field. It's safe
+to run twice. You can also type the questions into the list by hand and skip
+the script: once the list has entries, the site ignores the old field.
 
 ### SEO on a page
 

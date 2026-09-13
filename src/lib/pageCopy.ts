@@ -117,6 +117,29 @@ function resolveJsonField(raw: unknown, lang: Lang, label: string): unknown {
   return undefined;
 }
 
+/**
+ * Resolve a question-and-answer list (e.g. the home page `faqs` field) into
+ * the `[question, answer]` pairs the templates use.
+ *
+ * An item is included for a language only when BOTH its question and answer
+ * exist in that language — so a question translated into English but not yet
+ * Arabic appears on the English page only, never with English text on the
+ * Arabic page. Returns undefined when nothing qualifies, which keeps the
+ * fallback copy.
+ */
+function resolveQaList(value: unknown, lang: Lang): Array<[string, string]> | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const pairs: Array<[string, string]> = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') continue;
+    const { question, answer } = item as Record<string, unknown>;
+    const q = isLocale(question) ? localeText(question, lang) : null;
+    const a = isLocale(answer) ? localeText(answer, lang) : null;
+    if (q && a) pairs.push([q, a]);
+  }
+  return pairs.length > 0 ? pairs : undefined;
+}
+
 /** The SEO overrides for one page, already resolved to this language. */
 export type ResolvedSeo = {
   title?: string;
@@ -193,6 +216,7 @@ export async function pageCopy<T extends object>(
   for (const [key, value] of Object.entries(doc)) {
     if (key.startsWith('_')) continue;
     if (key === 'seo') continue; // handled above
+    if (key === 'faqs') continue; // handled after the loop, so it beats faqs_json
 
     if (key.endsWith('_json')) {
       const name = key.slice(0, -'_json'.length);
@@ -204,6 +228,12 @@ export async function pageCopy<T extends object>(
     const resolved = resolveField(value, lang);
     if (resolved !== undefined) merged[key] = resolved;
   }
+
+  // The FAQ list (one Sanity item per question) replaces the old single-box
+  // `faqs_json` field. When the list has entries for this language it wins;
+  // otherwise whatever faqs_json or the built-in copy provided stays.
+  const faqs = resolveQaList(doc.faqs, lang);
+  if (faqs) merged.faqs = faqs;
 
   return merged as T & PageExtras;
 }

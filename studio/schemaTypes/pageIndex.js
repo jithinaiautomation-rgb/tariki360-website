@@ -137,12 +137,61 @@ export default defineType({
       type: 'localeString',
     }),
     defineField({
-      name: 'faqs_json',
-      title: 'Faqs (advanced)',
-      type: 'text',
-      rows: 6,
+      name: 'faqs',
+      title: 'FAQs',
       description:
-        'Advanced: a JSON list, stored as text, in the form {"en":[...],"ar":[...]}. Keep the structure exactly as it is and change only the wording inside the quotes. A mistake here is ignored by the site, which falls back to its built-in copy.',
+        'One item per question. Click "Add item" to add a question, drag to reorder. Each has its own English and Arabic boxes — a question only appears on the English or Arabic page when both its question and answer are filled in for that language.',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          name: 'faqItem',
+          title: 'FAQ',
+          fields: [
+            defineField({
+              name: 'question',
+              title: 'Question',
+              type: 'localeString',
+              validation: (Rule) =>
+                Rule.custom((v) => (v?.en?.trim() || v?.ar?.trim() ? true : 'Add the question in at least one language.')),
+            }),
+            defineField({
+              name: 'answer',
+              title: 'Answer',
+              type: 'localeText',
+              validation: (Rule) =>
+                Rule.custom((v, ctx) => {
+                  const q = ctx.parent?.question;
+                  for (const lang of ['en', 'ar']) {
+                    if (q?.[lang]?.trim() && !v?.[lang]?.trim()) {
+                      return `The ${lang === 'en' ? 'English' : 'Arabic'} question has no ${lang === 'en' ? 'English' : 'Arabic'} answer, so it will not appear on that page.`;
+                    }
+                  }
+                  return true;
+                }).warning(),
+            }),
+          ],
+          preview: {
+            select: { qEn: 'question.en', qAr: 'question.ar', aEn: 'answer.en', aAr: 'answer.ar' },
+            prepare: ({ qEn, qAr, aEn, aAr }) => ({
+              title: qEn || qAr || '(no question yet)',
+              subtitle: [qEn && aEn ? 'EN' : null, qAr && aAr ? 'AR' : null].filter(Boolean).join(' · ') || 'incomplete',
+            }),
+          },
+        },
+      ],
+    }),
+    defineField({
+      // The old single-box version. Kept only so documents that still have it
+      // don't show an "unknown field" warning; hidden, and ignored by the site
+      // once the FAQs list above has entries. Run scripts/migrate-faqs.js to
+      // move its contents into the list and remove it.
+      name: 'faqs_json',
+      title: 'FAQs (old format)',
+      type: 'text',
+      hidden: ({ value }) => !value,
+      readOnly: true,
+      description: 'Old format, no longer edited here. Run the FAQ migration script to move these into the FAQs list above.',
     }),
     defineField({
       name: 'feats_json',
