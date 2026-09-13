@@ -74,20 +74,26 @@ button {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Keyboard-only "skip to content" link. Invisible until focused. */
+/* Keyboard-only "skip to content" link. Invisible until focused.
+   It is hidden ABOVE the page, not off to the side. The previous version sat
+   at left:-9999px, which is harmless on English pages but on right-to-left
+   (Arabic) pages makes that off-screen area scrollable, giving every Arabic
+   page a ~10,000px sideways scroll. Content above the top edge can't be
+   scrolled to in either direction. */
 .skip-link {
   position: absolute;
-  left: -9999px;
   top: 0;
+  inset-inline-start: 0;
+  transform: translateY(-100%);
   z-index: 999;
   background: #fff;
   color: var(--c-green);
   padding: 12px 20px;
-  border-radius: 0 0 10px 0;
+  border-end-end-radius: 10px;
   font-weight: 700;
 }
 .skip-link:focus {
-  left: 0;
+  transform: none;
 }
 
 /* ---- RTL / Arabic mode ---- */
@@ -322,9 +328,19 @@ button {
 /* ---- Toast ---- */
 .vtoast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: var(--c-dark); color: #fff; padding: 14px 24px; border-radius: 999px; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; z-index: 300; box-shadow: 0 10px 36px rgba(0, 0, 0, 0.3); white-space: nowrap; }
 
-/* ---- Video section grid ---- */
-.vvideo-grid { min-height: 520px; }
-@media (max-width: 900px) { .vvideo-grid { min-height: auto; } .vvideo-char { display: none; } }
+/* ---- Video section grid ----
+   The video column is wider than the picture column, and the video box is a
+   16:9 rectangle, the same shape as a normal widescreen video, so the video
+   fills it without being cropped. */
+.vvideo-grid { display: grid; grid-template-columns: 1.7fr 1fr; gap: 40px; align-items: center; }
+.vvideo-grid > * { min-width: 0; }
+/* On Arabic pages the template swaps the video and picture order, which puts
+   the video in the second column; flip the widths so the video keeps the wide
+   one. */
+[dir='rtl'] .vvideo-grid { grid-template-columns: 1fr 1.7fr; }
+/* One column on small screens, in both directions: the RTL rule above is more
+   specific than a plain .vvideo-grid rule, so it must be named here too. */
+@media (max-width: 900px) { .vvideo-grid, [dir='rtl'] .vvideo-grid { grid-template-columns: 1fr; } .vvideo-char { display: none; } }
 
 /* ---- Img placeholder ---- */
 .vph { border-radius: 24px; background: linear-gradient(135deg, rgba(133, 19, 29, 0.1) 0%, rgba(12, 77, 28, 0.08) 100%); border: 1.5px solid var(--c-border); display: flex; align-items: center; justify-content: center; color: var(--c-green); }
