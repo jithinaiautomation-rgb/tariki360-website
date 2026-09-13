@@ -1,4 +1,5 @@
 import { defineField, defineType } from 'sanity';
+import { structuredDataField } from './structuredData';
 
 /**
  * Services Page
@@ -26,6 +27,7 @@ export default defineType({
         'Optional. Overrides how this page appears in Google and when shared. Leave blank to use the page headline and intro.',
       type: 'seoLocale',
     }),
+    structuredDataField(),
     defineField({
       name: 'forInstitutionsBtn',
       title: 'For Institutions Btn',

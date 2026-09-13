@@ -113,3 +113,31 @@ export function breadcrumbSchema(items: Array<{ name: string; url: string }>) {
     })),
   };
 }
+
+/**
+ * FAQPage — a list of questions and answers.
+ *
+ * Google's rule: only mark up questions that are visible on the page. This is
+ * used on the home page, built from the same list the FAQ accordion renders.
+ *
+ * Since 2023 Google shows FAQ rich results only for well-known government and
+ * health websites, so this is unlikely to change how the page looks in Google.
+ * It is still valid markup that other search engines and AI answer tools read.
+ */
+export function faqPageSchema(items: unknown) {
+  if (!Array.isArray(items)) return null;
+  const mainEntity = items
+    .filter(
+      (pair): pair is [string, string] =>
+        Array.isArray(pair) && typeof pair[0] === 'string' && typeof pair[1] === 'string',
+    )
+    .map(([q, a]) => [q.trim(), a.trim()] as const)
+    .filter(([q, a]) => q.length > 0 && a.length > 0)
+    .map(([q, a]) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    }));
+  if (mainEntity.length === 0) return null;
+  return { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity };
+}

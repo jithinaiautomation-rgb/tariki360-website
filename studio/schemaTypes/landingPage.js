@@ -1,5 +1,6 @@
 import { defineArrayMember, defineField, defineType } from 'sanity';
 import { languageField } from './language';
+import { structuredDataField } from './structuredData';
 
 /**
  * A landing page you build yourself, section by section, with no developer
@@ -294,6 +295,7 @@ export default defineType({
       type: 'seo',
       group: 'seo',
     }),
+    { ...structuredDataField({ bilingual: false }), group: 'seo' },
   ],
   preview: {
     select: { title: 'title', slug: 'slug.current', language: 'language' },

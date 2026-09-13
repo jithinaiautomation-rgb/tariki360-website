@@ -34,6 +34,7 @@ export interface LandingPageData {
   title: string;
   slug: string;
   sections?: any[];
+  structuredData?: unknown[];
   seo?: { title?: string; description?: string; shareImage?: any };
 }
 
@@ -91,6 +92,7 @@ const isFirstHero = (section: any) => section === firstHero;
   seoTitle={page.seo?.title}
   seoDescription={page.seo?.description}
   seoImage={shareImage}
+  structuredData={page.structuredData}
   schemas={schemas}>
   {
     /* If the page has no hero, the title still needs to appear as an h1

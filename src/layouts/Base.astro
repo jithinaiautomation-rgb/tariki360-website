@@ -16,7 +16,9 @@ import Nav from '~/components/Nav.astro';
 import Footer from '~/components/Footer.astro';
 import SignupModal from '~/components/react/SignupModal.tsx';
 
-import { dirFor, htmlLang, type Lang } from '~/lib/i18n';
+import { absoluteUrl, dirFor, htmlLang, localePath, type Lang } from '~/lib/i18n';
+import { urlFor } from '~/lib/sanity';
+import { buildStructuredData } from '~/lib/structuredData';
 import { getSiteSettings, defaultShareImageUrl } from '~/lib/settings';
 import { COMMON } from '~/content/site';
 import { getGlobalCopy } from '~/lib/globalCopy';
@@ -39,6 +41,8 @@ interface Props {
   authorName?: string;
 
   schemas?: Array<Record<string, unknown>>;
+  /** Raw "Structured data" entries from Sanity, turned into JSON-LD below. */
+  structuredData?: unknown;
   noindex?: boolean;
 }
 
@@ -55,6 +59,7 @@ const {
   modifiedTime,
   authorName,
   schemas = [],
+  structuredData,
   noindex,
 } = Astro.props;
 
@@ -64,6 +69,21 @@ const common = COMMON[lang];
 // `toast` is a function and props are JSON-serialised when an island
 // hydrates, so it is stripped here and kept inside the component.
 const { toast: _toast, ...modalCopy } = (await getGlobalCopy(lang)).modal;
+
+// Structured data an editor added in Sanity (Service, Course, Event, Office),
+// appended to the schemas the page generated itself. Incomplete entries are
+// skipped with a build warning — see src/lib/structuredData.ts.
+const allSchemas = [
+  ...schemas,
+  ...buildStructuredData(structuredData, {
+    lang,
+    siteUrl: absoluteUrl('/', Astro.site),
+    pageUrl: absoluteUrl(localePath(lang, path), Astro.site),
+    orgName: settings.siteName,
+    orgLogo: absoluteUrl('/logo.png', Astro.site),
+    imageUrl: (image) => urlFor(image as never).width(1200).height(675).fit('crop').url(),
+  }),
+];
 ---
 
 <!doctype html>
@@ -107,7 +127,7 @@ const { toast: _toast, ...modalCopy } = (await getGlobalCopy(lang)).modal;
       publishedTime={publishedTime}
       modifiedTime={modifiedTime}
       authorName={authorName}
-      schemas={schemas}
+      schemas={allSchemas}
       noindex={noindex}
     />
   </head>

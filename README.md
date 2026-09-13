@@ -145,6 +145,51 @@ the Google result should read differently from the page itself.
 Blog posts, white papers and landing pages have the same section, but with
 single-language fields — those documents are written in one language each.
 
+### Structured data (schema.org)
+
+Structured data is a hidden block of JSON in each page's code that tells
+search engines what the page describes — a service, an event, your office —
+rather than leaving them to guess from the words.
+
+**Some of it is automatic** and needs nothing from you:
+
+| Page | Generated automatically |
+| ---- | ----------------------- |
+| Home | Organization, WebSite, **FAQPage** (from the FAQ section) |
+| Blog posts | Article |
+| Every nested page | BreadcrumbList |
+
+**The rest you can add yourself.** Each page document and each landing page
+has a **Structured data (schema.org)** field under its SEO section. Click
+*Add item* and choose:
+
+- **Service** — something you sell, with an optional price. Suits Services.
+- **Course** — needs a name and a description.
+- **Event** — a webinar or open day. Online events need a link; in-person
+  events need a venue.
+- **Office / organisation** — phone, email, address, opening hours. Suits
+  Contact.
+
+Three rules to know:
+
+1. **Only describe what's actually on the page.** Markup that doesn't match
+   the visible page can be ignored or penalised by Google. Don't add a
+   Service entry to the About page.
+2. **Incomplete entries are skipped, not published.** The Studio flags
+   missing required fields; if one still gets through, the build leaves that
+   entry out and logs a warning. Broken markup is worse than none.
+3. **Each language uses its own text.** On page documents, fill in the
+   English and Arabic boxes — the Arabic page never borrows English text.
+
+There's no FAQ option here, deliberately: Google requires FAQ markup to match
+questions visible on the page, and the home page FAQ already generates its
+own. Note that Google now shows FAQ rich results only for major government and
+health sites, so FAQ markup is unlikely to change how you appear in Google —
+though other search engines and AI tools still read it.
+
+To check a live page, paste its URL into Google's
+[Rich Results Test](https://search.google.com/test/rich-results).
+
 **Navigation, Footer & Sign-up** holds the nav labels, footer columns and the
 sign-up dialog text. Link *labels* come from Sanity; the *destinations* stay in
 code, so renaming a footer link can't break routing.

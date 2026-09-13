@@ -2,6 +2,7 @@ import localeString from './localeString';
 import localeText from './localeText';
 import seo from './seo';
 import seoLocale from './seoLocale';
+import { structuredDataTypes } from './structuredData';
 
 import globalSettings from './globalSettings';
 import pageIndex from './pageIndex';
@@ -28,6 +29,7 @@ export const schemaTypes = [
   localeText,
   seo,
   seoLocale,
+  ...structuredDataTypes,
 
   // Page wording. One document per page; these already hold your content.
   globalSettings,

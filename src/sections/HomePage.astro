@@ -34,7 +34,7 @@ import {
   HOME_VIDEO_QUERY,
 } from '~/lib/queries';
 import { getSiteSettings } from '~/lib/settings';
-import { organizationSchema, webSiteSchema } from '~/lib/seo';
+import { faqPageSchema, organizationSchema, webSiteSchema } from '~/lib/seo';
 
 interface Props {
   lang: Lang;
@@ -99,7 +99,10 @@ const schemas = [
     description: settings.defaultDescription,
     lang,
   }),
-];
+  // The FAQ is visible on this page, which is Google's condition for FAQPage
+  // markup. Built from the same questions the accordion renders.
+  faqPageSchema(t.faqs),
+].filter((s): s is NonNullable<typeof s> => s !== null);
 
 const ctaImg = rtl ? ctaImgAr : ctaImgEn;
 ---
@@ -112,6 +115,7 @@ const ctaImg = rtl ? ctaImgAr : ctaImgEn;
   seoTitle={t.seo?.title}
   seoDescription={t.seo?.description}
   seoImage={t.seo?.image}
+  structuredData={t.structuredData}
   schemas={schemas}>
   {/* ================================================================ Hero */}
   <section class="vhero">

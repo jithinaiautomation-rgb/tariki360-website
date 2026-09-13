@@ -124,6 +124,13 @@ export type ResolvedSeo = {
   image?: string;
 };
 
+/** Fields pageCopy adds on top of the dictionary it was given. */
+export type PageExtras = {
+  seo?: ResolvedSeo;
+  /** Raw structured data entries; turned into JSON-LD in the base layout. */
+  structuredData?: unknown[];
+};
+
 /**
  * Resolve the `seo` object on a page document.
  *
@@ -169,14 +176,14 @@ export async function pageCopy<T extends object>(
   docType: string,
   lang: Lang,
   fallback: T,
-): Promise<T> {
+): Promise<T & PageExtras> {
   const doc = await fetchSanity<Record<string, unknown> | null>(
     `*[_type == $docType][0]`,
     { docType },
     null,
   );
 
-  if (!doc) return fallback;
+  if (!doc) return fallback as T & PageExtras;
 
   const merged: Record<string, unknown> = { ...(fallback as Record<string, unknown>) };
 
@@ -198,5 +205,5 @@ export async function pageCopy<T extends object>(
     if (resolved !== undefined) merged[key] = resolved;
   }
 
-  return merged as T;
+  return merged as T & PageExtras;
 }

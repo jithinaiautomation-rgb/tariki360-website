@@ -141,6 +141,7 @@ export const LANDING_BY_SLUG_QUERY = `*[
     // logoOrQuote
     quote, attribution, attributionRole
   },
+  structuredData,
   ${SEO_FIELDS}
 }`;
 
