@@ -81,7 +81,8 @@ const SOCIAL_ICONS: Record<string, string> = {
       {
         t.cols.map((col) => (
           <div>
-            <h6>{col.heading}</h6>
+            {/* h2, not h6: headings must not skip levels. Styled via class, so it looks the same. */}
+            <h2 class="vfooter-heading">{col.heading}</h2>
             <ul>
               {col.items.map((item) => (
                 <li>

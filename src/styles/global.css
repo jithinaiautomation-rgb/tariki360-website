@@ -279,7 +279,7 @@ button {
 
 /* ---- Feature item ---- */
 .vfeat { display: flex; gap: 14px; align-items: flex-start; }
-.vfeat h5 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--c-dark); }
+.vfeat .vfeat-title { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--c-dark); }
 .vfeat p { margin: 0; font-size: 13px; color: var(--c-muted); line-height: 1.5; }
 
 /* ---- Journey steps ---- */
@@ -336,7 +336,7 @@ button {
 @media (max-width: 560px) { .vfooter-grid { grid-template-columns: 1fr; gap: 36px; } .vfooter { padding: 56px 0 28px; } .vfooter hr { margin: 36px 0 24px; } }
 .vfooter-logo { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 26px; font-weight: 800; color: var(--c-lime); margin-bottom: 14px; letter-spacing: -0.02em; }
 .vfooter-copy { color: rgba(255, 255, 255, 0.38); font-size: 14px; line-height: 1.6; max-width: 280px; }
-.vfooter h6 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-lime); margin: 0 0 20px; }
+.vfooter .vfooter-heading { font-size: 11px; font-weight: 700; line-height: normal; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-lime); margin: 0 0 20px; }
 .vfooter ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
 .vfooter a { color: rgba(255, 255, 255, 0.5); font-size: 14px; cursor: pointer; text-decoration: none; transition: color 0.18s; }
 .vfooter a:hover { color: var(--c-lime); }
